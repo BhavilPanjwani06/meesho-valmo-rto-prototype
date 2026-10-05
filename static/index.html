@@ -1,0 +1,651 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Valmo DICE | Hub control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1e1026;--mut:#6b6175;--line:#e7e1ec;--paper:#f6f4f8;--card:#fff;--rail:#26112f;--rail2:#3a1a47;
+--brand:#7a1f9c;--brand2:#5b1477;--soft:#f2e8f8;
+--bad:#d92d3f;--badS:#fdecee;--warn:#d97a00;--warnS:#fff3df;--good:#12924f;--goodS:#e5f5ec;--info:#2563d9;--infoS:#e8effd;--grey:#7b7484;--greyS:#eeecf0;--teal:#0e8f9b;--tealS:#e2f4f6;
+--r:12px}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:14px/1.4 Manrope,"Segoe UI",system-ui,"Noto Sans Devanagari",sans-serif;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;overflow:hidden}
+body.tv{zoom:1.22}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid #b98bd0;outline-offset:2px;border-radius:6px}
+h1,h2,h3,p{margin:0}
+svg[viewBox="0 0 24 24"]{width:18px;height:18px;flex:none;vertical-align:-3px}
+small,.mu{color:var(--mut)}small{font-size:12px}
+.banner{background:var(--rail);color:#d9c6e3;font-size:12px;padding:3px 14px;display:flex;gap:10px;align-items:center;flex:none}
+.banner b{color:#fff;font-weight:700}
+.app{display:grid;grid-template-columns:78px minmax(0,1fr);flex:1;min-height:0}
+body.tv .rail{display:none}body.tv .app{grid-template-columns:minmax(0,1fr)}
+/* rail */
+.rail{background:var(--rail);display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;overflow:auto}
+.mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(140deg,#c2358f,#7a1f9c);display:grid;place-items:center;color:#fff;font-weight:800;font-size:19px;margin-bottom:10px}
+.rn{width:64px;border:0;background:none;color:#bda6c9;padding:8px 2px 6px;border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;position:relative}
+.rn svg{width:22px;height:22px}.rn:hover{background:var(--rail2);color:#fff}
+.rn.on{background:var(--rail2);color:#fff}.rn.on:before{content:"";position:absolute;left:-7px;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:#e05bb0}
+.rn i{position:absolute;top:2px;right:8px;min-width:17px;height:17px;border-radius:9px;background:var(--bad);color:#fff;font:700 10px/17px Manrope,sans-serif;text-align:center;padding:0 4px;font-style:normal}
+.rsp{flex:1}
+/* header */
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:10px;padding:9px 18px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap;flex:none}
+.top h1{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-right:6px}
+.field{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:0 10px;height:36px;color:var(--mut)}
+.field svg{width:16px;height:16px;flex:none}.field select,.field input{border:0;background:none;font:inherit;color:var(--ink);height:34px;outline:0;min-width:0}
+.field:focus-within{border-color:var(--brand);background:#fff}.field select{font-weight:700;padding-right:4px}
+.sp{flex:1}
+.tr{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:10px;padding:3px;background:var(--paper)}
+.tr .st{font-size:12px;font-weight:700;padding:0 8px;color:var(--mut)}
+.ib{height:30px;min-width:30px;border-radius:8px;border:0;background:none;display:grid;place-items:center;padding:0 8px;font-weight:700;font-size:12px}
+.ib svg{width:16px;height:16px}.ib:hover{background:#e9e2ee}.ib.on{background:var(--brand);color:#fff}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mut)}.live:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--grey)}.live.on{color:var(--good)}.live.on:before{background:var(--good);animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.25}}
+/* view */
+.view{flex:1;min-height:0;overflow:auto;padding:14px 18px 20px}
+.view.fixed{overflow:hidden;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.card h2{font-size:15px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card h3{font-size:13px;font-weight:800;margin:12px 0 6px}
+.sub{color:var(--mut);font-size:12.5px}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}
+/* buttons & chips */
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1.2}
+.btn svg{width:16px;height:16px}.btn:hover{border-color:#cdbfd6;background:#faf7fc}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}.btn.pri:hover{background:var(--brand2)}
+.btn.bad{background:var(--bad);border-color:var(--bad);color:#fff}.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:8px}.btn.lg{padding:12px 18px;font-size:15px;border-radius:12px}
+.btn.gh{border-color:transparent;background:none;color:var(--brand)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--greyS);color:#4b4353;white-space:nowrap}
+.chip.bad{background:var(--badS);color:var(--bad)}.chip.warn{background:var(--warnS);color:#a55a00}.chip.good{background:var(--goodS);color:var(--good)}.chip.info{background:var(--infoS);color:var(--info)}.chip.brand{background:var(--soft);color:var(--brand)}.chip.teal{background:var(--tealS);color:var(--teal)}
+.seg{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:700;font-size:13px;color:var(--mut);display:flex;gap:6px;align-items:center}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px #0002}.seg b{font-weight:800;border-radius:8px;padding:0 6px;background:var(--greyS);font-size:12px}
+.seg button.on b.bad,.seg b.bad{background:var(--bad);color:#fff}.seg b.warn{background:var(--warn);color:#fff}
+.tag{font-size:10.5px;font-weight:700;border:1px solid var(--line);border-radius:5px;padding:0 5px;color:var(--mut);background:#fff;white-space:nowrap}
+/* KPI band */
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:14px;flex:none}
+.k{padding:11px 16px;border-right:1px solid var(--line);min-width:0}.k:last-child{border:0}
+.k .l{font-size:12.5px;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k .v{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:2px 0}.k .v small{font-size:14px;font-weight:700}
+.k .s{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k.bad .v{color:var(--bad)}.k.good .v{color:var(--good)}.k.warn .v{color:var(--warn)}
+.mb{height:6px;background:var(--greyS);border-radius:4px;overflow:hidden;margin:5px 0 3px}.mb i{display:block;height:100%;background:var(--brand);border-radius:4px}
+/* pipeline */
+.pipe{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 10px 6px;flex:none}
+.pg{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}
+.gl{font-size:11px;font-weight:700;color:var(--mut);text-align:center;border-bottom:2px solid var(--line);padding-bottom:2px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gl.g5{border-color:#f0b1b9;color:var(--bad)}.gl.gr{border-color:#c9e7d6;color:var(--good)}
+.pn{border:0;background:none;border-radius:10px;padding:4px 2px;text-align:center;position:relative;min-width:0}
+.pn:hover{background:var(--paper)}.pn.on{background:var(--soft);outline:2px solid var(--brand)}
+.pn .n{font-size:22px;font-weight:800;line-height:1.1}.pn .t{font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.pn .r{position:absolute;top:1px;right:5px;background:var(--bad);color:#fff;font:700 10px/16px Manrope,sans-serif;border-radius:8px;min-width:16px;padding:0 4px}
+.pn.held .n{color:var(--bad)}.pn.res .n{color:var(--good)}
+/* floor split */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;flex:1;min-height:0}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;min-height:0;min-width:0}
+.ph{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ph h2{font-size:15px;font-weight:800}.pb{overflow:auto;flex:1;min-height:0}
+.cap{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--paper);border-bottom:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+.cap b{color:var(--ink)}
+.qr{display:grid;grid-template-columns:22px minmax(104px,.75fr) minmax(0,1.5fr) minmax(128px,.8fr) minmax(178px,.95fr);gap:12px;align-items:center;padding:8px 14px 8px 11px;border-bottom:1px solid var(--line);border-left:5px solid transparent;cursor:pointer;background:#fff}
+.qr:hover{background:#fbf9fc}.qr.sel{background:var(--soft)}
+.qr.fix{border-left-color:var(--bad)}.qr.watch{border-left-color:var(--warn)}.qr.ok{border-left-color:var(--good)}.qr.done{border-left-color:#b9b2c0}
+.qr.over{background:repeating-linear-gradient(135deg,#fff,#fff 8px,#faf6fc 8px,#faf6fc 16px)}
+.rk{font-weight:800;color:var(--mut);text-align:center;font-size:13px}
+.who{display:flex;flex-direction:column;gap:3px;min-width:0}.who b{font-size:14px}.who span{color:var(--mut)}
+.who .m{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:1px}
+.prob{display:flex;gap:8px;align-items:flex-start;font-weight:600;line-height:1.3}.prob svg{width:18px;height:18px;flex:none;margin-top:1px}
+.prob.bad svg{color:var(--bad)}.prob.warn svg{color:var(--warn)}.prob.good svg{color:var(--good)}.prob.info svg{color:var(--info)}.prob.grey svg{color:var(--grey)}
+.press{font-weight:800;line-height:1.15;font-size:13px}.press small{display:block;font-weight:600}.press.bad{color:var(--bad)}.press.warn{color:var(--warn)}
+.act{display:flex;flex-direction:column;gap:3px;align-items:stretch}.act .btn{white-space:normal;text-align:left;justify-content:flex-start;padding:7px 12px}
+.act .meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--mut);font-weight:600}
+.empty{padding:34px 20px;text-align:center;color:var(--mut)}.empty svg{width:34px;height:34px;color:var(--good);margin-bottom:6px}.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:2px}
+/* alerts + feed */
+.al{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.al.high{background:#fff8f8}.al b{font-size:13.5px}.al p{font-size:12.5px;color:var(--mut)}
+.fd{padding:7px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:10px 1fr;gap:9px;font-size:12.5px;cursor:pointer}.fd:hover{background:#faf7fc}
+.fd i{width:8px;height:8px;border-radius:50%;margin-top:5px;background:var(--grey)}.fd.ok i{background:var(--good)}.fd.bad i{background:var(--bad)}.fd.act i{background:var(--brand)}.fd small{display:block}
+.side{display:flex;flex-direction:column;gap:12px;min-height:0}.side .panel:first-child{flex:none;max-height:44%}.side .panel:last-child{flex:1}
+/* tables */
+.tbl{width:100%;border-collapse:collapse}.tbl th{font-size:12px;font-weight:700;color:var(--mut);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:#fbfafc;position:sticky;top:0;z-index:1}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}.tbl tr.r{cursor:pointer}.tbl tr.r:hover td{background:#faf7fc}.tbl td.n,.tbl th.n{text-align:right}
+.tbl th.s{cursor:pointer}.tbl th.s:hover{color:var(--ink)}
+.bars{display:flex;flex-direction:column;gap:7px}.bl{display:grid;grid-template-columns:130px 1fr 44px;gap:8px;align-items:center;font-size:13px}.bl .b{height:9px;background:var(--greyS);border-radius:5px;overflow:hidden}.bl .b i{display:block;height:100%;border-radius:5px;background:var(--brand)}.bl b{text-align:right}
+/* rescue desk */
+.kan{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.kh{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px 12px 0 0;font-weight:800}.kh small{font-weight:600;margin-left:auto}
+.kh.blue{background:var(--infoS);color:var(--info)}.kh.orange{background:var(--warnS);color:#a55a00}.kh.grey{background:var(--greyS);color:#4b4353}.kh.green{background:var(--goodS);color:var(--good)}
+.kb{border:1px solid var(--line);border-top:0;border-radius:0 0 12px 12px;background:#fff;padding:8px;display:flex;flex-direction:column;gap:8px;min-height:90px}
+.hc{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;cursor:pointer;background:#fff}.hc:hover{border-color:#cdbfd6}
+.hc.blue{border-left:4px solid var(--info)}.hc.orange{border-left:4px solid var(--warn)}.hc.grey{border-left:4px solid var(--grey)}
+.win{height:6px;border-radius:4px;background:var(--greyS);overflow:hidden}.win i{display:block;height:100%;background:var(--good)}.win.low i{background:var(--bad)}.win.mid i{background:var(--warn)}
+.decay{display:flex;gap:4px;align-items:flex-end;height:38px}.decay div{flex:1;background:#e5d3ef;border-radius:3px 3px 0 0;position:relative;min-height:3px}.decay div:first-child{background:var(--brand)}
+.decay span{position:absolute;bottom:-15px;left:0;right:0;text-align:center;font-size:10px;color:var(--mut)}
+/* network */
+.stg{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+.sn{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}.sn .n{font-size:26px;font-weight:800;line-height:1}.sn small{display:block}
+.sn.hot{border-color:#f0b1b9;background:#fff9fa}
+/* drawer */
+.dr{position:fixed;top:var(--dt,0);right:0;bottom:0;width:min(580px,100%);background:#fff;z-index:40;border-left:1px solid var(--line);box-shadow:-18px 0 40px #26112f30;display:flex;flex-direction:column;animation:sl .18s ease-out}
+@keyframes sl{from{transform:translateX(30px);opacity:.4}}
+.dh{padding:14px 18px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.db{overflow:auto;flex:1;padding:14px 18px 30px;display:flex;flex-direction:column;gap:12px}
+.do{background:var(--soft);border:1px solid #dcc3ea;border-radius:14px;padding:14px}.do .btn.lg{width:100%;margin-top:10px}
+.do.must{background:#fff6e8;border-color:#f0d4a3}
+.blk{border:1px solid var(--line);border-radius:12px;padding:12px 14px}.blk>h3:first-child{margin-top:0}
+.gs{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.g1{border-radius:9px;padding:6px 2px;text-align:center;font-size:10.5px;font-weight:700;background:var(--paper);color:var(--mut);line-height:1.15;border:1px solid var(--line)}
+.g1 b{display:block;font-size:14px}.g1.done{background:var(--goodS);color:var(--good);border-color:#bfe3cd}.g1.cur{background:var(--warnS);color:#a55a00;border-color:#efc37d;outline:2px solid #efc37d}.g1.cur.ok{background:var(--goodS);color:var(--good);border-color:#bfe3cd;outline-color:#bfe3cd}
+.jn{display:grid;grid-template-columns:18px 1fr auto;gap:8px;padding:5px 0;align-items:center;font-size:13px;border-bottom:1px dashed var(--line)}.jn:last-child{border:0}
+.jn i{width:12px;height:12px;border-radius:50%;background:#d9d2df;justify-self:center}.jn.done i{background:var(--good)}.jn.current i{background:var(--warn);box-shadow:0 0 0 4px #ffe4b8}
+.jn.future{color:#9b93a3}.jn small{text-align:right}
+.kv{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:13px}.kv span:nth-child(odd){color:var(--mut)}.kv b{text-align:right}
+details.blk>summary{cursor:pointer;font-weight:800;font-size:13px;list-style:none;display:flex;align-items:center;gap:8px}details.blk>summary::-webkit-details-marker{display:none}details.blk>summary:after{content:"+";margin-left:auto;color:var(--mut);font-size:18px;line-height:1}details[open].blk>summary:after{content:"-"}
+details.blk[open]>summary{margin-bottom:8px}
+.tl{border-left:2px solid var(--line);margin-left:5px;padding-left:12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;max-height:240px;overflow:auto}
+.phone{width:250px;margin:4px auto;border:7px solid #2a1633;border-radius:28px;background:#fff;padding:14px 12px;font-size:12.5px;box-shadow:0 8px 24px #26112f30}
+.phone .hd{font-weight:800;color:var(--brand);margin-bottom:6px}.phone .eta{font-size:20px;font-weight:800;margin:6px 0 2px}
+.ps{display:flex;gap:8px;align-items:center;padding:3px 0;color:#9b93a3}.ps i{width:9px;height:9px;border-radius:50%;background:#d9d2df}.ps.d{color:var(--ink)}.ps.d i{background:var(--good)}.ps.c{color:var(--ink);font-weight:800}.ps.c i{background:var(--brand);box-shadow:0 0 0 3px #e8cff5}
+/* modal/toast */
+.mo{position:fixed;inset:0;background:#26112f80;z-index:60;display:grid;place-items:center;padding:16px}.mo>div{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:88vh;overflow:auto;padding:20px}
+.toasts{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.ts{background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;box-shadow:0 8px 24px #0004;font-weight:600;max-width:min(560px,92vw);animation:tin .2s}.ts.bad{background:#7d1420}.ts.good{background:#0c6b3a}
+@keyframes tin{from{transform:translateY(-8px);opacity:0}}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--mut);margin:10px 0 4px}
+.in{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;background:#fff;height:38px}.in:focus{border-color:var(--brand);outline:0}
+.sc{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.step{display:flex;gap:9px;font-size:13px;padding:5px 0;align-items:flex-start}.step svg{width:16px;height:16px;color:var(--good);flex:none;margin-top:2px}
+.dis{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;text-align:left}.dis:hover{border-color:var(--brand)}.dis b{font-size:13.5px}.dis span{font-size:12.5px;color:var(--mut)}
+.info{background:var(--infoS);color:#1d4bab;border-radius:10px;padding:8px 12px;font-size:12.5px}
+.note{font-size:12px;color:var(--mut)}
+.sk{stroke:var(--brand);fill:none;stroke-width:2}
+/* responsive */
+@media(max-width:1360px){.view.fixed{overflow:auto}.split{grid-template-columns:minmax(0,1fr);flex:none}.split>.panel:first-child{height:min(640px,72vh)}.side{flex-direction:row;height:320px}.side .panel{flex:1;min-width:0;max-height:none!important}}
+@media(max-width:1180px){.kpis{grid-template-columns:repeat(3,1fr)}.k:nth-child(3n){border-right:0}.k:nth-child(-n+3){border-bottom:1px solid var(--line)}.split{grid-template-columns:1fr}.side{flex-direction:row}.side .panel:first-child{max-height:none;flex:1}.qr{grid-template-columns:22px minmax(96px,.7fr) minmax(0,1.4fr) minmax(112px,.7fr) minmax(170px,.9fr);gap:10px}.press{display:none}.g4,.g5{grid-template-columns:repeat(2,1fr)}.stg{grid-template-columns:repeat(3,1fr)}.kan{grid-template-columns:1fr}.view.fixed{overflow:auto;display:block}.view.fixed>*{margin-bottom:12px}.split{min-height:600px}}
+@media(max-width:760px){.dr{top:0!important}.app{grid-template-columns:1fr;grid-template-rows:1fr auto}.rail{flex-direction:row;order:2;justify-content:space-around;padding:4px}.mark,.rsp{display:none}.rn{width:auto;flex:1}.rn.on:before{left:20%;right:20%;top:-4px;bottom:auto;width:auto;height:3px;border-radius:0 0 4px 4px}
+.g2,.g3,.g4,.g5{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.k:nth-child(3n){border-right:1px solid var(--line)}.k:nth-child(2n){border-right:0}.top{padding:8px 12px}.top h1{font-size:17px;width:100%}.view{padding:10px 10px 16px}.pg{grid-template-columns:repeat(4,1fr)}.gl{display:none}.side{flex-direction:column}.qr{grid-template-columns:24px 1fr}.qr>*{grid-column:2}.qr .rk{grid-column:1;grid-row:1}.bl{grid-template-columns:100px 1fr 36px}.tbl{font-size:12.5px}.dr{width:100%}.field.hs select{max-width:150px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+input[type=range]{accent-color:var(--brand)}
+
+/* ---------- v2: cause mix, now->after, decision table, result cards ---------- */
+.split>*{min-width:0}.view,.main,.panel,.pb{min-width:0}.qr>*{min-width:0}
+.cz{display:inline-block;font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px;letter-spacing:.01em}
+.cz.bad{background:#fde7ea;color:#9b1c2c}.cz.warn{background:#fff1dc;color:#8a5200}
+.evd{display:block;font-weight:500;color:var(--mute,#6b6275);margin-top:2px}
+.na{display:flex;align-items:center;gap:6px}.na i{font-style:normal;color:#9a90a6;font-weight:800}
+.nb{display:flex;flex-direction:column;line-height:1.2;min-width:0}.nb small{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b8296;font-weight:700}
+.nb b{font-size:14px;font-weight:800}.nb span{font-size:11px;color:#6b6275}.nb b.bad{color:var(--bad)}.nb b.warn{color:#b26a00}.nb.ok b{color:var(--good)}
+.lk{background:none;border:0;padding:0;color:var(--brand);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.qr .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:#fcfafd}
+.cml{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#8b8296;margin-right:2px}
+.cc{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink)}
+.cc svg{width:13px;height:13px}.cc b{background:#f1ecf5;border-radius:999px;padding:0 6px;font-size:11px}.cc.blk b{background:#fde7ea;color:#9b1c2c}
+.cc.on{background:var(--brand);border-color:var(--brand);color:#fff}.cc.on b{background:#ffffff33;color:#fff}
+.grp{margin-left:auto;font-size:12px;font-weight:600;display:flex;gap:5px;align-items:center;cursor:pointer}
+.results{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:90;display:flex;flex-direction:column;gap:8px;width:min(560px,94vw)}
+.rc{position:relative;background:#fff;border:1px solid var(--line);border-left:6px solid #b9b2c0;border-radius:12px;padding:12px 38px 12px 14px;box-shadow:0 10px 30px #26112f38;animation:tin .2s}
+.rc.good{border-left-color:var(--good)}.rc.bad{border-left-color:var(--bad)}.rc.warn{border-left-color:#e08a00}
+.rc b{display:flex;gap:6px;align-items:center;font-size:14px}.rc b svg{width:16px;height:16px}.rc p{margin:4px 0 8px;font-size:13px;line-height:1.4;color:#3d3546}
+.rc .rx{position:absolute;top:8px;right:8px;background:none;border:0;cursor:pointer;color:#8b8296}.rc .rx svg{width:14px;height:14px}
+.dx{border:1px solid #efc9cf;background:#fff7f8;border-radius:12px;padding:10px 12px}.dx:not(.blk){border-color:#f0dcb8;background:#fffaf0}
+.dxh{display:flex;gap:10px;align-items:flex-start}.dxh svg{width:22px;height:22px;flex:none;color:var(--bad);margin-top:2px}.dx:not(.blk) .dxh svg{color:#b26a00}
+.dxh small{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#8b8296}.dxh b{display:block;font-size:15px;line-height:1.3}.dxh span{font-size:12px;color:#6b6275}
+.vd{display:flex;flex-direction:column;gap:2px;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px;line-height:1.4}
+.vd b{font-size:12px;text-transform:uppercase;letter-spacing:.06em}.vd.must{background:#fff6e8;border:1px solid #f0d4a3}.vd.act{background:var(--soft);border:1px solid #dcc3ea}.vd.keep{background:#eef7f1;border:1px solid #bfe0cc}
+.ns{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.ns>div{display:flex;flex-direction:column;line-height:1.25}.ns small{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b8296;font-weight:700}.ns b{font-size:15px}.ns span{font-size:11px;color:#6b6275}.ns b.bad{color:var(--bad)}
+.cmp{overflow-x:auto;margin-top:8px;border:1px solid var(--line);border-radius:12px}
+.ct{border-collapse:separate;border-spacing:0;width:100%;min-width:520px;font-size:12.5px}
+.ct th,.ct td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.35;min-width:132px}
+.ct thead th{background:#faf7fc;font-size:12.5px;position:sticky;top:0}.ct th.rl{position:sticky;left:0;background:#faf7fc;min-width:112px;max-width:112px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#6b6275;z-index:1}
+.ct thead th:first-child{left:0;z-index:2;min-width:112px}.ct tr:last-child td{border-bottom:0}
+.ct td.best,.ct th.best{background:#f6eefb}.ct th.hold{color:#6b6275}
+.ct td small{display:block;color:#7b7286;font-size:11px;margin-top:1px;font-weight:500}.ct td b.big{font-size:16px}.ct b.good{color:var(--good)}.ct b.bad{color:var(--bad)}
+.ct .arw{color:#9a90a6;font-size:11px;line-height:1}.ct th b{display:block}.ct th small{display:block;font-weight:600;color:#8b8296;font-size:10px}
+.rec,.req{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border-radius:6px;padding:1px 6px;margin-bottom:3px}.rec{background:var(--brand);color:#fff}.req{background:#e08a00;color:#fff}
+.un{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:#6b6275;margin-top:6px}.un svg{width:14px;height:14px;flex:none;margin-top:2px}
+.dr{width:min(700px,100%)}
+@media(max-width:1000px){.qr{grid-template-columns:22px minmax(0,1fr);gap:6px 10px}.qr>.prob,.qr>.na,.qr>.act{grid-column:2}}
+@media(max-width:760px){.results{bottom:74px}.cm{padding:8px 10px}.grp{margin-left:0}.side{flex-direction:column;height:auto}}
+
+.cm{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.cc,.cml,.grp{flex:none;white-space:nowrap}
+.qr .prob{font-size:13px;font-weight:600}.qr .prob .cz{font-size:10.5px}
+
+.ct th.clk{cursor:pointer}.ct th.clk:hover{background:#f1e7f8}.ct th.sel{box-shadow:inset 0 -3px 0 var(--brand)}.ct th .dl{display:block;font-size:10px;font-weight:700;color:var(--brand);margin-top:2px}
+.opd{margin-top:10px;border:1px solid #dcc3ea;background:#fdfbff;border-radius:12px;padding:12px}
+.ft{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;margin-top:4px}.ft>div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ft>div.to{border-color:#bfe0cc;background:#f3fbf6}.ft small{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b8296;font-weight:700}.ft b{font-size:13px;line-height:1.3}.ft i{align-self:center;font-style:normal;color:#9a90a6;font-weight:800}
+.cutoff{display:flex;gap:6px;align-items:center;background:#fff6e8;border:1px solid #f0d4a3;border-radius:8px;padding:6px 10px;margin-top:8px;font-size:12.5px;font-weight:700;color:#7a4a00}.cutoff svg{width:14px;height:14px;flex:none}
+.kv2{display:grid;grid-template-columns:minmax(110px,.55fr) 1fr;gap:5px 12px;margin-top:8px;font-size:12.5px;line-height:1.35}.kv2 span{color:#6b6275;font-weight:600}.kv2 b{font-weight:600;color:var(--ink)}
+.ct.cd{min-width:0}.ct.cd th,.ct.cd td{min-width:0;padding:6px 8px}.ct.cd tr.first td{background:#f3fbf6;font-weight:700}
+@media(max-width:600px){.ft{grid-template-columns:1fr}.ft i{transform:rotate(90deg);justify-self:center}}
+.hc .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+<div class="banner"><b>Prototype</b><span>Synthetic data. Not Valmo or Meesho production data or systems.</span></div><div class="app" id="app"></div>
+<script>
+/* Valmo DICE hub control - prototype on SYNTHETIC data. Plain ASCII-safe logic; Hindi strings are for native-speaker review. */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S={view:'floor',hub:'',lane:'fix',stage:null,sel:null,q:'',lang:'en',play:false,speed:1,busy:false,tv:false,
+  pf:{q:'',lane:'',state:'',sort:'risk',dir:-1},order:null,story:null,storyLog:[],whyOpen:false,tab:'dj',cause:null,group:false,allOpts:false,optSel:null};
+let DB=null,D=null,META=null,timer=null;
+const L=(en,hi)=>(S.lang==='hi'&&hi)?hi:en;
+const pc=x=>Math.round(x*100)+'%',inr=x=>(x<0?'-':'')+'\u20B9'+Math.abs(Math.round(x)).toLocaleString('en-IN');
+const api=async(p,b)=>{const r=await fetch('/api/'+p,b===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)});const j=await r.json();if(!r.ok)throw new Error(j.error||'Request failed');return j};
+/* ---------- icons ---------- */
+const IC={floor:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+parcel:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',rescue:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
+network:'<circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="5" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M7 11l10-5M7 13l10 5"/>',ledger:'<path d="M4 20V10M10 20V4M16 20v-7M2 20h20"/>',
+sim:'<path d="M4 6h9M19 6h1M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="16" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+play:'<path d="M7 4.5l12 7.5-12 7.5z" fill="currentColor"/>',pause:'<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>',step:'<path d="M5 4.5l10 7.5-10 7.5z" fill="currentColor"/><path d="M19 4v16"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+rider:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21a7 7 0 0114 0"/>',door:'<path d="M6 21V4h10v17M3 21h18"/><circle cx="13.5" cy="13" r=".9" fill="currentColor"/>',stop:'<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/>',
+cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>',
+info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',reset:'<path d="M20 12a8 8 0 11-2.6-5.9M20 4v5h-5"/>',download:'<path d="M12 4v11M7 11l5 5 5-5M4 20h16"/>',
+phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',store:'<path d="M4 9l1.5-5h13L20 9M4 9v11h16V9"/><path d="M4 9c0 2 3 2 4 0 1 2 3 2 4 0 1 2 3 2 4 0 1 2 4 2 4 0"/>',
+bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',route:'<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 000-6H9a3 3 0 010-6h7"/>',tv:'<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/>',
+box:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/>',users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5a3 3 0 010 6M18 20a6 6 0 00-3-5"/>'};
+const ic=(n,c)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${c?`class="${c}"`:''} aria-hidden="true">${IC[n]||''}</svg>`;
+/* ---------- text (English / Hindi) ---------- */
+const V={contact_repair:['Call customer and confirm address','ग्राहक को कॉल कर पता पक्का करें'],window_confirm:['Confirm delivery time with customer','डिलीवरी का समय पक्का करें'],hubfit:['Switch to a faster lane','तेज़ रूट पर भेजें'],common_cause:['Move to the next delivery wave','अगली वेव में डालें'],
+zonefit:['Give to a rider who knows this area','इलाके के जानकार राइडर को दें'],ldp:['Hand to local delivery partner','लोकल पार्टनर को दें'],retry_window:["Retry at customer's preferred time",'ग्राहक के पसंदीदा समय पर दोबारा जाएं'],neighbour:['Hand to neighbour with OTP','पड़ोसी को OTP से दें'],
+payment_rescue:['Offer UPI instead of cash','कैश की जगह UPI दिलवाएं'],pickup_node:['Customer picks up at nearby shop','पास की दुकान से पिकअप'],local_recovery:["Sell nearby, don't send back",'पास में बेचें, वापस न भेजें'],geo_pin:['Ask customer for an exact map pin','ग्राहक से सटीक मैप पिन मंगाएं'],phone_verify:['Verify the phone on WhatsApp','फोन WhatsApp पर पक्का करें'],cod_nudge:['Offer prepaid with a small discount','छोटे डिस्काउंट पर प्रीपेड का ऑफर दें'],reroute_hub:['Move to the correct hub','सही हब पर भेजें'],refusal_call:['Call to save the refused order','मना किए ऑर्डर पर कॉल करें'],forward_stock:['Send to a hub with demand for this item','जिस हब में मांग है वहां भेजें'],
+planned_reverse:['Send back in a planned batch','प्लान्ड बैच में वापस भेजें']};
+const vb=a=>V[a]?V[a][S.lang==='hi'?1:0]:a;
+const OUT={PREVENT:['Delivered on the first try','पहली बार में डिलीवर'],SAVE:['Delivered after rescue','रेस्क्यू के बाद डिलीवर'],RECOVER:['Sold nearby, value kept','पास में बिका, वैल्यू बची'],CHEAPER:['Returned in a planned batch','प्लान्ड वापसी, सस्ती'],RTO:['Returned at full cost','पूरी लागत पर वापस']};
+const OC={PREVENT:'good',SAVE:'teal',RECOVER:'brand',CHEAPER:'warn',RTO:'bad'};const outl=o=>OUT[o][S.lang==='hi'?1:0];
+const TRI={GREEN:['Keep trying','कोशिश जारी रखें','good'],BLUE:['Change how we try','तरीका बदलें','info'],ORANGE:['Rescue nearby','पास में बचाएं','warn'],GREY:['Let go, send back','वापस भेजें','grey']};
+const REASON_HI={'Customer unavailable':'ग्राहक घर पर नहीं','Address / locatability':'पता नहीं मिल रहा','Customer refused':'ग्राहक ने मना किया','COD cash unavailable':'कैश नहीं था','Weak attempt (integrity flag)':'कमज़ोर अटेम्प्ट (जांच)','Parcel damaged':'पार्सल क्षतिग्रस्त'};
+const rs=r=>S.lang==='hi'?(REASON_HI[r]||r):r;
+const STG=['Order placed','First-mile hub','Carting','Source sort','Line-haul','Dest. sort','Regional haul','LMDC','Out for delivery'];
+const STG_HI=['ऑर्डर','फर्स्ट-माइल','कार्टिंग','सोर्स सॉर्ट','लाइन-हॉल','डेस्ट. सॉर्ट','रीजनल हॉल','LMDC','डिलीवरी पर'];
+const stn=i=>S.lang==='hi'?STG_HI[i]:STG[i];
+const CAUSE={addr_incomplete:['pin','Address incomplete','पता अधूरा','पता अधूरा है, राइडर को दरवाज़ा नहीं मिलेगा'],addr_landmark:['pin','Landmark-only address','सिर्फ़ लैंडमार्क वाला पता','पता लैंडमार्क पर टिका है, राइडर को मिलना मुश्किल'],phone_weak:['phone','Phone unreachable','फोन नहीं लगता','ग्राहक का फोन कम उठता है, डिलीवरी पक्की नहीं'],
+ addr_drift:['pin','Address doubt','पते पर शक','रास्ते में पते पर शक मिला, राइडर के निकलने से पहले पक्का करें'],phone_drift:['phone','Phone doubt','फोन पर शक','फोन भरोसेमंद नहीं लग रहा, निकलने से पहले जांचें'],
+ missed_connection:['route','Missed connection','कनेक्शन छूटा','लाइन-हॉल कनेक्शन छूट गया'],weather:['bolt','Weather or traffic','मौसम या ट्रैफिक','मौसम या ट्रैफिक से रूट धीमा है'],wrong_hub:['store','Wrong hub','गलत हब','पार्सल गलत हब पर गया'],slow_leg:['clock','Slow leg','धीमा पड़ाव','नेटवर्क में धीमा चल रहा है'],thin_slack:['clock','Thin slack','कम स्लैक','समय बहुत कम बचा है, एक और देरी से वादा टूटेगा'],
+ rider_mismatch:['rider','Rider mismatch','राइडर मेल नहीं','राइडर इस इलाके से अनजान है'],cod_risky:['cash','High-risk cash order','जोखिम वाला कैश ऑर्डर','ज़्यादा जोखिम वाला कैश ऑर्डर, मना हो सकता है'],window_weak:['clock','Slot mismatch','स्लॉट मेल नहीं','ग्राहक चुने स्लॉट में घर पर न हो'],
+ fail_unavailable:['door','Not home','घर पर नहीं',''],fail_address:['pin','Address not found','पता नहीं मिला',''],fail_refused:['stop','Refused','मना किया',''],fail_cod_cash:['cash','No cash','कैश नहीं',''],fail_weak:['door','Weak attempt','कमज़ोर अटेम्प्ट',''],fail_damaged:['box','Damaged','क्षतिग्रस्त','']};
+const clab=id=>CAUSE[id]?CAUSE[id][S.lang==='hi'?2:1]:id;
+function causeTxt(r){if(S.lang!=='hi'||!CAUSE[r.cause])return r.headline;const m=(r.block&&r.gate===2&&r.s_now!=null&&r.s_now<0)?` (${Math.abs(r.s_now)} मिनट पीछे)`:'';return CAUSE[r.cause][3]+m}
+/* one plain sentence per parcel */
+function say(r){const hi=S.lang==='hi';
+ if(r.outcome)return{ic:'check',tone:'good',txt:outl(r.outcome)};
+ if(r.state==='HELD-OPEN')return{ic:r.reason==='Parcel damaged'?'box':r.reason==='Customer refused'?'stop':r.reason==='COD cash unavailable'?'cash':r.reason&&r.reason.startsWith('Address')?'pin':'door',tone:'bad',txt:(hi?'डिलीवरी फेल: ':'Delivery failed: ')+rs(r.reason)+(r.window_left_h!=null?(hi?` (${Math.round(r.window_left_h)} घंटे बचे)`:` (${Math.round(r.window_left_h)}h to rescue)`):'')};
+ if((r.lane==='fix'||r.lane==='watch')&&r.cause&&r.headline&&CAUSE[r.cause])return{ic:CAUSE[r.cause][0],tone:r.block?'bad':'warn',txt:causeTxt(r)};
+ if(r.lane==='fix')return r.gate===1?{ic:'pin',tone:'bad',txt:hi?'पता या फोन साफ़ नहीं, भेजने से पहले पक्का करें':'Address or phone unclear, confirm before dispatch'}:
+   r.gate===3?{ic:'rider',tone:'bad',txt:hi?'राइडर इस इलाके से अनजान':'Rider not familiar with this area'}:
+   {ic:'clock',tone:'bad',txt:hi?`${Math.abs(r.slack)} मिनट लेट, स्लॉट छूट सकता है`:`Running ${Math.abs(r.slack)} min late, may miss the delivery slot`};
+ if(r.lane==='watch')return{ic:'clock',tone:'warn',txt:hi?'ठीक है, पर समय कम बचा है':'Fine for now, little time to spare'};
+ return{ic:'check',tone:'good',txt:hi?'सही रास्ते पर':'On track'}}
+function pressure(r){const hi=S.lang==='hi';if(r.outcome)return'';
+ if(r.state==='HELD-OPEN'){const h=Math.round(r.window_left_h);return`<div class="press ${h<12?'bad':h<24?'warn':''}">${h}h<small>${hi?'रेस्क्यू विंडो':'rescue window'}</small></div>`}
+ if(r.gate===1)return`<div class="press">${hi?'भेजने से पहले':'Before dispatch'}<small>${hi?'गेट 1':'Gate 1'}</small></div>`;
+ return`<div class="press ${r.slack<0?'bad':r.slack<60?'warn':''}">${r.slack<0?'-':'+'}${Math.abs(r.slack)} ${hi?'मिनट':'min'}<small>${hi?'स्लैक':'slack'}</small></div>`}
+/* ---------- toast ---------- */
+function toast(m,k){let t=$('#toasts');if(!t){t=document.createElement('div');t.id='toasts';t.className='toasts';document.body.append(t)}const d=document.createElement('div');d.className='ts '+(k||'');d.textContent=m;t.append(d);setTimeout(()=>d.remove(),4200)}
+/* ---------- data ---------- */
+const rowOf=id=>DB&&DB.rows.find(r=>r.id===id);
+async function refresh(){try{DB=await api('dash'+(S.hub?'?hub='+encodeURIComponent(S.hub):''));if(S.sel){try{D=await api('parcel/'+S.sel)}catch(e){D=null;S.sel=null}}}catch(e){toast(e.message,'bad')}paint()}
+const NAV=[['floor','floor',['Hub floor','हब फ़्लोर']],['parcels','parcel',['Parcels','पार्सल']],['rescue','rescue',['Rescue desk','रेस्क्यू डेस्क']],['network','network',['Network','नेटवर्क']],['ledger','ledger',['Outcomes','नतीजे']],['sim','sim',['Simulator','सिम्युलेटर']]];
+function nav(v){S.view=v;paint()}
+function openP(id){S.optSel=null;S.sel=id;D=null;paint();api('parcel/'+id).then(v=>{D=v;paint()}).catch(e=>toast(e.message,'bad'))}
+function closeP(){S.sel=null;D=null;paint()}
+function setHub(h){S.hub=h;S.stage=null;refresh()}
+function setLang(){S.lang=S.lang==='en'?'hi':'en';paint()}
+function setTv(){S.tv=!S.tv;document.body.classList.toggle('tv',S.tv);paint()}
+function gsearch(e){if(e.key!=='Enter')return;const q=e.target.value.trim().toUpperCase();if(!q)return;const m=(DB?DB.rows:[]).find(r=>r.id.includes(q));if(m)openP(m.id);else toast(L('No parcel matches "'+q+'"','कोई पार्सल नहीं मिला'),'bad')}
+/* ---------- header / rail ---------- */
+function rail(){const fix=DB?DB.kpi.fix:0;return`<nav class="rail" aria-label="Main">${'<div class="mark" aria-hidden="true">V</div>'}${NAV.map(([k,i,n])=>`<button class="rn ${S.view===k?'on':''}" onclick="nav('${k}')" aria-label="${n[0]}" ${S.view===k?'aria-current="page"':''}>${ic(i)}<span>${n[S.lang==='hi'?1:0].split(' ')[0]}</span>${k==='floor'&&fix?`<i>${fix}</i>`:''}${k==='rescue'&&DB&&DB.kpi.held?`<i>${DB.kpi.held}</i>`:''}</button>`).join('')}<div class="rsp"></div></nav>`}
+function header(){const t=NAV.find(n=>n[0]===S.view)[2][S.lang==='hi'?1:0];const sim=DB?DB.sim:{tick:0,auto:'routine',mode:'sample'};
+ const hubs=DB?DB.hubs:[];
+ return`<header class="top"><h1>${t}</h1>
+ <label class="field hs" title="${L('Choose your hub','अपना हब चुनें')}">${ic('store')}<select aria-label="Hub" onchange="setHub(this.value)"><option value="">${L('All hubs','सभी हब')} (${hubs.length})</option>${hubs.map(h=>`<option value="${h.city}" ${S.hub===h.city?'selected':''}>${h.hub}${h.fix?` (${h.fix})`:''}</option>`).join('')}</select></label>
+ <label class="field" style="min-width:210px">${ic('search')}<input id="gs" placeholder="${L('Find parcel, press Enter','पार्सल खोजें, Enter दबाएं')}" onkeydown="gsearch(event)" aria-label="Find parcel"></label>
+ <div class="sp"></div>
+ <label class="field" title="${L('How fixes turn out in this simulation. Realistic means a fix can fail by its stated chance.','इस सिमुलेशन में समाधान कैसे नतीजा देते हैं। रियलिस्टिक में समाधान अपनी संभावना के हिसाब से फेल हो सकता है।')}">${ic('bolt')}<select aria-label="Fix outcome" onchange="setMode(this.value)"><option value="sample" ${sim.mode==='sample'?'selected':''}>${L('Fixes: realistic','समाधान: रियलिस्टिक')}</option><option value="success" ${sim.mode==='success'?'selected':''}>${L('Fixes: always work','समाधान: हमेशा सफल')}</option><option value="fail" ${sim.mode==='fail'?'selected':''}>${L('Fixes: always fail','समाधान: हमेशा फेल')}</option></select></label>
+ <span class="live ${S.play?'on':''}">${S.play?L('Live','लाइव'):L('Paused','रुका')}</span>
+ <div class="tr" role="group" aria-label="Simulation"><span class="st">${L('Step','स्टेप')} ${sim.tick}</span>
+  <button class="ib ${S.play?'on':''}" onclick="togglePlay()" title="${L('Play / pause (Space)','चलाएं / रोकें (Space)')}" aria-label="Play or pause">${ic(S.play?'pause':'play')}</button>
+  <button class="ib" onclick="stepSim()" title="${L('Advance every parcel one stop (N)','हर पार्सल को एक पड़ाव आगे (N)')}" aria-label="Step">${ic('step')}</button>
+  <button class="ib" onclick="setSpeed()" title="${L('Speed','गति')}">${S.speed}x</button></div>
+ <button class="ib" style="border:1px solid var(--line);height:36px" onclick="setLang()" title="Language">${S.lang==='en'?'हिंदी':'English'}</button>
+ <button class="ib ${S.tv?'on':''}" style="border:1px solid var(--line);height:36px" onclick="setTv()" title="${L('Wall display mode (T)','वॉल डिस्प्ले (T)')}" aria-label="Wall mode">${ic('tv')}</button></header>`}
+/* ---------- paint ---------- */
+const VIEWS={floor:()=>vFloor(),parcels:()=>vParcels(),rescue:()=>vRescue(),network:()=>vNetwork(),ledger:()=>vLedger(),sim:()=>vSim()};
+function paint(){const app=$('#app');if(!app)return;const keep={};document.querySelectorAll('[data-keep]').forEach(e=>keep[e.dataset.keep]=e.scrollTop);const act=document.activeElement&&document.activeElement.id;const gs=$('#gs')?$('#gs').value:'';
+ if(!DB){app.innerHTML='<div class="empty" style="margin:auto"><b>Loading hub data...</b></div>';return}
+ app.innerHTML=rail()+`<div class="main">${header()}<div class="view ${S.view==='floor'?'fixed':''}" id="view" data-keep="view">${VIEWS[S.view]()}</div></div>`+(S.sel?drawer():'')+(S.whyOpen&&D?whyModal():'');
+ document.querySelectorAll('[data-keep]').forEach(e=>{if(keep[e.dataset.keep]!=null)e.scrollTop=keep[e.dataset.keep]});
+ if(gs&&$('#gs'))$('#gs').value=gs;if(act==='gs'&&$('#gs'))$('#gs').focus();
+ const h=$('.top');if(h)document.body.style.setProperty('--dt',Math.round(h.getBoundingClientRect().bottom)+'px');
+ if(S.view==='sim')simAfterPaint&&simAfterPaint()}
+/* ---------- sim transport ---------- */
+async function stepSim(quiet){if(S.busy)return;S.busy=true;try{const r=await api('sim/tick',{});await refresh();if(!quiet)toast(L(`Step ${r.tick}: ${r.moved} parcels moved, ${r.acted} fixed by autopilot, ${r.waiting} waiting, ${r.new} new orders`,`स्टेप ${r.tick}: ${r.moved} पार्सल आगे, ${r.acted} ऑटोपायलट ने ठीक किए, ${r.waiting} इंतज़ार में, ${r.new} नए`))}catch(e){toast(e.message,'bad')}S.busy=false}
+function togglePlay(){S.play=!S.play;clearInterval(timer);if(S.play){const ms={1:4500,2:2600,4:1500}[S.speed];timer=setInterval(()=>stepSim(true),ms);stepSim(true)}paint()}
+function setSpeed(){S.speed=S.speed===1?2:S.speed===2?4:1;if(S.play){clearInterval(timer);timer=setInterval(()=>stepSim(true),{1:4500,2:2600,4:1500}[S.speed])}paint()}
+/* ---------- parcel actions ---------- */
+async function setMode(m){try{await api('sim/config',{mode:m});await refresh()}catch(e){toast(e.message,'bad')}}
+/* result cards: what was tried, did it work, and what changed (worked and cleared are different things) */
+function rcard(cls,title,body,btns){let t=$('#results');if(!t){t=document.createElement('div');t.id='results';t.className='results';document.body.append(t)}
+ const d=document.createElement('div');d.className='rc '+cls;d.innerHTML=`<button class="rx" aria-label="Close" onclick="this.parentNode.remove()">${ic('x')}</button><b>${title}</b><p>${body}</p>${btns?`<div class="row">${btns}</div>`:''}`;t.prepend(d);while(t.children.length>3)t.lastChild.remove();
+ const ms=cls==='bad'||cls==='warn'?15000:9000;setTimeout(()=>d.remove(),ms)}
+function ba(res){const b=res.before,a=res.after;if(!b||!a)return'';const bits=[];if(a.risk!=null)bits.push(`${L('RTO risk','RTO जोखिम')} ${pc(b.risk)} \u2192 ${pc(a.risk)}`);if(a.slack_min!=null&&b.slack_min!=null&&b.slack_min!==a.slack_min)bits.push(`${L('slack','स्लैक')} ${b.slack_min>=0?'+':''}${b.slack_min} \u2192 ${a.slack_min>=0?'+':''}${a.slack_min} ${L('min','मिनट')}`);return bits.join(', ')}
+function showResult(id,res){if(!res)return;const nm=vb(res.action),nx=res.next;const go=nx?`<button class="btn sm pri" onclick="this.closest('.rc').remove();doAct('${id}','${nx.id}')">${L('Do next: ','अगला करें: ')}${vb(nx.id)}</button>`:'';const open=`<button class="btn sm" onclick="this.closest('.rc').remove();openP('${id}')">${L('Open parcel','पार्सल खोलें')}</button>`;
+ if(res.kind==='fixed')rcard('good',`${ic('check')} ${id}: ${L('Worked, gate cleared','सफल, गेट साफ़')}`,`${nm}. ${ba(res)}. ${L('Cost','लागत')} ${inr(res.cost)}. ${L('The parcel can move on.','पार्सल आगे जा सकता है।')}`,open);
+ else if(res.kind==='resolved')rcard('good',`${ic('check')} ${id}: ${outl(res.after.outcome)}`,`${nm}. ${L('Cost','लागत')} ${inr(res.cost)}.`,open);
+ else if(res.kind==='partial')rcard('warn',`${ic('alert')} ${id}: ${L('Worked, but still blocked','सफल, पर अभी भी अटका')}`,`${nm}. ${ba(res)}. ${L('One fix was not enough.','एक समाधान काफ़ी नहीं था।')}`,go+open);
+ else if(res.kind==='failed')rcard('bad',`${ic('alert')} ${id}: ${L('Did not work this time','इस बार सफल नहीं हुआ')}`,`${nm}: ${res.why_failed||''}. ${L('Nothing changed, cost spent','कुछ नहीं बदला, लागत लगी')} ${inr(res.cost)}. ${L('It had a','इसकी')} ${pc(res.p)} ${L('chance of working, so this can happen. Choose "Fixes: always work" in the header to see the success path.','सफलता की संभावना थी, इसलिए ऐसा हो सकता है। सफल रास्ता देखने के लिए हेडर में "समाधान: हमेशा सफल" चुनें।')}`,go+open);
+ else if(res.kind==='kept')rcard('',`${ic('info')} ${id}: ${L('Kept as it is','जैसा है वैसा रखा')}`,`${res.msg}`,open);
+ else rcard('',`${ic('info')} ${id}: ${L('Already handled','पहले ही हो चुका')}`,`${res.msg}`,open)}
+async function doAct(id,a){const r=rowOf(id)||{};const act=a||r.rec_id;if(!act)return openP(id);try{const v=await api(`parcel/${id}/act`,{action:act,mode:DB.sim.mode});if(S.sel===id)D=v;showResult(id,v.result);await refresh()}catch(e){toast(e.message,'bad')}}
+async function doHold(id,steps){try{const v=await api(`parcel/${id}/hold`,{steps:steps||3});if(S.sel===id)D=v;showResult(id,v.result);await refresh()}catch(e){toast(e.message,'bad')}}
+async function doBulk(ids,label){if(!ids.length)return;try{const r=await api('bulk',{ids});const why=r.results.filter(x=>x.kind==='failed'&&x.why).slice(0,3).map(x=>`${x.id}: ${x.why}`).join('; ');
+ rcard(r.failed||r.partial?'warn':'good',`${ic('check')} ${L(`${r.tried} fixes tried`,`${r.tried} समाधान आज़माए`)}`,`${r.fixed} ${L('worked','सफल')}${r.partial?`, ${r.partial} ${L('worked but still blocked','सफल पर अभी अटके')}`:''}${r.failed?`, ${r.failed} ${L('did not work','सफल नहीं')}`:''}${r.skipped?`, ${r.skipped} ${L('skipped (already handled)','छोड़े (पहले हो चुके)')}`:''}.${why?` ${L('Why','कारण')}: ${esc(why)}.`:''}`);await refresh()}catch(e){toast(e.message,'bad')}}
+async function simEvent(k){try{D=k==='advance'?await api(`parcel/${S.sel}/advance`,{}):await api(`parcel/${S.sel}/event`,{event:k});await refresh()}catch(e){toast(e.message,'bad')}}
+async function toDoor(){try{for(let i=0;i<14;i++){let v=D;if(v.stage>=8||v.outcome||v.state==='HELD-OPEN')break;try{D=await api(`parcel/${S.sel}/advance`,{})}catch(e){if(!v.rec)throw e;D=await api(`parcel/${S.sel}/act`,{action:v.rec.id,mode:'success'})}}await refresh()}catch(e){toast(e.message,'bad')}}
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){return}
+ if(e.key==='/'){e.preventDefault();const g=$('#gs');g&&g.focus()}else if(e.key==='Escape'){if(S.whyOpen){S.whyOpen=false;paint()}else if(S.sel)closeP()}
+ else if(e.key===' '){e.preventDefault();togglePlay()}else if(e.key==='n'||e.key==='N')stepSim();else if(e.key==='t'||e.key==='T')setTv();
+ else if(e.key>='1'&&e.key<='6'){nav(NAV[+e.key-1][0])}
+ else if((e.key==='j'||e.key==='k'||e.key==='a')&&DB){const q=DB.queue.map(x=>x.id);if(!q.length)return;const i=q.indexOf(S.sel);if(e.key==='a'){if(S.sel)doAct(S.sel);return}const n=e.key==='j'?Math.min(q.length-1,i+1):Math.max(0,i-1);openP(q[n<0?0:n])}});
+/* ---------- Floor ---------- */
+function kpiBand(){const k=DB.kpi,c=DB.counts,cap=DB.capacity,hi=S.lang==='hi',dl=c.PREVENT+c.SAVE;
+ const K=(cls,l,v,s,extra)=>`<div class="k ${cls||''}"><div class="l">${l}</div><div class="v">${v}</div>${extra||''}<div class="s">${s}</div></div>`;
+ return`<div class="kpis" role="group" aria-label="Key numbers">
+ ${K(k.fix?'bad':'good',L('Need you now','अभी आपकी ज़रूरत'),k.fix,`${inr(k.exposed)} ${L('expected return cost','अपेक्षित वापसी लागत')}`)}
+ ${K(cap.unfunded?'warn':'',L('Rescue minutes','रेस्क्यू मिनट'),`${cap.used}<small> / ${cap.total}</small>`,cap.unfunded?`${cap.unfunded} ${L('over capacity','क्षमता से ज़्यादा')}`:L('All fixes funded','सब कवर'),`<div class="mb"><i style="width:${Math.min(100,100*cap.used/Math.max(1,cap.total))}%"></i></div>`)}
+ ${K(k.on_plan<70?'warn':'',L('On plan','समय पर'),`${k.on_plan}<small>%</small>`,`${k.late} ${L('running late','लेट')}`)}
+ ${K('',L('In the network','नेटवर्क में'),k.live,`${k.held} ${L('failed, held open','फेल, होल्ड पर')}`)}
+ ${K('good',L('Delivered','डिलीवर हुए'),dl,k.first_attempt!=null?`${k.first_attempt}% ${L('on first try','पहली बार में')}`:L('none yet','अभी नहीं'))}
+ ${K(c.RTO?'warn':'',L('Value kept','बचाई वैल्यू'),c.RECOVER+c.CHEAPER,`${c.RECOVER} ${L('sold','बिके')}, ${c.CHEAPER} ${L('cheaper','सस्ती')}${c.RTO?`, ${c.RTO} ${L('lost','गंवाए')}`:''}`)}
+ </div>`}
+function pipeStrip(){const st=DB.stages,k=DB.kpi,c=DB.counts,resolved=k.done;
+ const node=(i)=>{const s=st[i];return`<button class="pn ${S.stage===i?'on':''}" onclick="setStage(${i})" aria-label="${STG[i]}: ${s.n}"><div class="n">${s.n}</div><div class="t">${stn(i)}</div>${s.risk?`<span class="r" title="${L('needs action','कार्रवाई चाहिए')}">${s.risk}</span>`:''}</button>`};
+ return`<div class="pipe" aria-label="Parcels by stop"><div class="pg">
+ <div class="gl">${L('G1 Reachable','G1 पहुंच')}</div><div class="gl" style="grid-column:span 6">${L('G2 On plan: protect the promised wave','G2 प्लान पर: वादा की गई वेव बचाएं')}</div><div class="gl">${L('G3 Ready','G3 तैयार')}</div><div class="gl">${L('G4 Handover','G4 हैंडओवर')}</div><div class="gl g5">${L('G5 Failed','G5 फेल')}</div><div class="gl gr">${L('G6-7 Closed','G6-7 बंद')}</div>
+ ${[0,1,2,3,4,5,6,7,8].map(node).join('')}
+ <button class="pn held ${S.stage==='held'?'on':''}" onclick="setStage('held')" aria-label="Held open: ${k.held}"><div class="n">${k.held}</div><div class="t">${L('Held open','होल्ड पर')}</div></button>
+ <button class="pn res ${S.stage==='done'?'on':''}" onclick="setStage('done')" aria-label="Closed: ${resolved}"><div class="n">${resolved}</div><div class="t">${L('Closed','बंद')}</div></button>
+ </div></div>`}
+function setStage(s){S.stage=S.stage===s?null:s;if(s==='done'&&S.stage)S.lane='done';else if(s==='held'&&S.stage)S.lane='fix';paint()}
+function laneRows(){let rows=DB.rows;
+ if(S.stage!==null){if(S.stage==='held')rows=rows.filter(r=>r.state==='HELD-OPEN'&&!r.outcome);else if(S.stage==='done')rows=rows.filter(r=>r.outcome);else rows=rows.filter(r=>!r.outcome&&r.state!=='HELD-OPEN'&&r.stage===S.stage)}
+ const cnt={fix:0,watch:0,ok:0,done:0};rows.forEach(r=>cnt[r.lane]++);const lane=(S.stage!==null&&!cnt[S.lane]&&Object.values(cnt).some(x=>x))?Object.keys(cnt).find(k=>cnt[k]):S.lane;
+ let out=rows.filter(r=>r.lane===lane&&(!S.cause||r.cause===S.cause));const Q={};DB.queue.forEach(q=>Q[q.id]=q);
+ if(lane==='fix')out.sort((a,b)=>(Q[a.id]?Q[a.id].rank:999)-(Q[b.id]?Q[b.id].rank:999));else if(lane!=='done')out.sort((a,b)=>(b.gain||0)-(a.gain||0)||b.risk-a.risk);
+ if(S.group&&lane!=='done')out.sort((a,b)=>String(a.cause).localeCompare(String(b.cause)));
+ return{rows:out,cnt,lane,Q}}
+function sgn(n){return(n>=0?'+':'')+n}
+function naBlock(r){if(r.outcome)return'';const hi=S.lang==='hi',has=!!r.rec_id;
+ if(r.state==='HELD-OPEN'){const h=Math.round(r.window_left_h);return`<div class="na"><div class="nb"><small>${L('Now','अभी')}</small><b class="${h<12?'bad':h<24?'warn':''}">${h}h ${L('left','बचे')}</b><span>${L('returns at','वापसी')} ${inr(r.c_now)}</span></div>${has?`<i>\u2192</i><div class="nb ok"><small>${L('After','बाद में')}</small><b>${inr(r.c_after)}</b><span>${L('expected cost','अपेक्षित लागत')}</span></div>`:''}</div>`}
+ const blk=r.block&&(r.gate===1||r.gate===3),now=blk?L('Blocked','अटका'):r.gate===2&&r.block?`${sgn(r.s_now)} ${L('min','मिनट')}`:`${pc(r.r_now==null?r.risk:r.r_now)} ${L('risk','जोखिम')}`;
+ const aft=!has?'':blk?L('Cleared','साफ़'):r.gate===2&&r.block?`${sgn(r.s_after)} ${L('min','मिनट')}`:`${pc(r.r_after)} ${L('risk','जोखिम')}`;
+ const sub1=r.block&&r.gate===2?`${L('risk','जोखिम')} ${pc(r.r_now)}`:`${L('exp. cost','अपेक्षित लागत')} ${inr(r.c_now)}`,sub2=has?(r.block&&r.gate===2?`${L('risk','जोखिम')} ${pc(r.r_after)}`:`${L('exp. cost','अपेक्षित लागत')} ${inr(r.c_after)}`):'';
+ return`<div class="na"><div class="nb"><small>${L('Now','अभी')}</small><b class="${r.block?'bad':'warn'}">${now}</b><span>${sub1}</span></div>${has?`<i>\u2192</i><div class="nb ok"><small>${L('After','बाद में')}</small><b>${aft}</b><span>${sub2}</span></div>`:''}</div>`}
+function qrow(r,q,i){const s=say(r),hi=S.lang==='hi';let btn='';const act=r.lane==='fix'||r.lane==='watch';
+ if(act&&r.rec_id)btn=`<button class="btn pri" onclick="event.stopPropagation();doAct('${r.id}')">${vb(r.rec_id)}</button><div class="meta"><span>${r.rec_must?L('Keeps the promise','वादा सुरक्षित')+' ('+inr(r.rec_cost)+')':(r.gain>0?L('Saves ','बचत ')+inr(r.gain):inr(r.rec_cost))}</span><span>${pc(r.rec_p)} ${L('works','सफल')}</span><span>${r.rec_mins} ${L('min','मिनट')}</span></div><div class="meta"><button class="lk" onclick="event.stopPropagation();openP('${r.id}')">${L('Compare options','विकल्प देखें')}</button>${!r.held?`<button class="lk" onclick="event.stopPropagation();doHold('${r.id}')">${L('Keep as is','जैसा है रखें')}</button>`:`<span class="chip">${L('Kept as is','जैसा है रखा')} ${r.hold_left}</span>`}</div>`;
+ else if(act)btn=`<button class="btn" onclick="event.stopPropagation();openP('${r.id}')">${L('Review','देखें')}</button>`;
+ else if(r.lane==='done')btn=`<span class="chip ${OC[r.outcome]}">${outl(r.outcome)}</span>`;
+ else btn=`<span class="chip good">${L('No action needed','कार्रवाई नहीं')}</span>`;
+ const over=q&&!q.funded,cl=r.cause?`<span class="cz ${r.block?'bad':'warn'}">${clab(r.cause)}</span>`:'';
+ return`<div class="qr ${r.lane} ${over?'over':''} ${S.sel===r.id?'sel':''}" onclick="openP('${r.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openP('${r.id}')">
+ <div class="rk">${q?q.rank:i+1}</div>
+ <div class="who"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b>${r.id}</b> <span>${esc(r.product)}</span></div><div class="m"><small>${r.hub.replace('LMDC ','')}</small><span class="tag">${r.payment}</span><span class="tag">${inr(r.value)}</span></div></div>
+ <div class="prob ${s.tone}">${ic(s.ic)}<span>${cl} ${s.txt}${r.evidence&&act?`<small class="evd">${esc(r.evidence)}${r.more?` \u00B7 +${r.more} ${L('more','और')}`:''}</small>`:''}${over?` <span class="chip warn">${L('Over rescue capacity','क्षमता से ज़्यादा')}</span>`:''}</span></div>
+ ${naBlock(r)||'<div></div>'}<div class="act">${btn}</div></div>`}
+function alertsPanel(){const cl=DB.clusters;
+ return`<div class="panel"><div class="ph"><h2>${L('Alerts','अलर्ट')}</h2>${cl.length?`<span class="chip bad">${cl.length}</span>`:''}<span class="tag" style="margin-left:auto">M4 ${L('proposed','प्रस्तावित')}</span></div><div class="pb" data-keep="alerts">
+ ${cl.length?cl.map(c=>{const t=c.kind==='common_cause'?[L(`${c.n} parcels off plan at ${c.hub}`,`${c.hub}: ${c.n} पार्सल प्लान से बाहर`),L('Same hub and time band, so this looks like one shared cause, not separate problems. Move them together to a protected wave.','एक ही हब और समय, यानी एक साझा कारण। सबको साथ में सुरक्षित वेव में डालें।')]:
+   [L(`${c.n} failed deliveries with the same reason at ${c.hub}`,`${c.hub}: ${c.n} फेल, एक ही कारण`),L(`Reason: ${c.reason}. Send one broadcast with a new wave or pickup option before riders repeat the same trip.`,'एक ही कारण: राइडर के वही चक्कर से पहले सभी ग्राहकों को नया समय या पिकअप विकल्प भेजें।')];
+   return`<div class="al ${c.sev}"><b>${ic('alert','')} ${t[0]}</b><p>${t[1]}</p><div class="row"><button class="btn pri sm" onclick="doBulk(${JSON.stringify(c.ids).replace(/"/g,'&quot;')})">${L('Apply the recommended fix to all','सभी पर सुझाया समाधान लगाएं')} (${c.n})</button><span class="tag">${c.tag}</span></div></div>`}).join(''):
+   `<div class="al" style="flex-direction:row;align-items:center;gap:10px"><span style="color:var(--good)">${ic('check')}</span><div><b>${L('No shared problems','कोई साझा समस्या नहीं')}</b><p>${L('DICE watches for many parcels failing for the same reason.','DICE देखता है कि कई पार्सल एक ही वजह से फेल तो नहीं हो रहे।')}</p></div></div>`}</div></div>`}
+function feedPanel(){return`<div class="panel"><div class="ph"><h2>${L('Live updates','लाइव अपडेट')}</h2></div><div class="pb" data-keep="feed">${DB.feed.length?DB.feed.slice(0,30).map(f=>`<div class="fd ${f.kind}" onclick="openP('${f.id}')"><i></i><div>${esc(f.txt)}<small>${f.id} ${L('at','पर')} ${f.city}, ${L('step','स्टेप')} ${f.tick}</small></div></div>`).join(''):`<div class="empty">${L('Nothing yet. Press play or step.','अभी कुछ नहीं। प्ले या स्टेप दबाएं।')}</div>`}</div></div>`}
+function causeStrip(){const cs=DB.causes||[];if(!cs.length)return'';
+ return`<div class="cm" role="group" aria-label="${L('Filter by cause','कारण से छांटें')}"><span class="cml">${L('What is going wrong','क्या गड़बड़ है')}</span><button class="cc ${!S.cause?'on':''}" onclick="S.cause=null;paint()">${L('All','सभी')}</button>${cs.map(c=>`<button class="cc ${S.cause===c.id?'on':''} ${c.block?'blk':''}" onclick="S.cause=S.cause==='${c.id}'?null:'${c.id}';paint()" title="${clab(c.id)}">${ic(CAUSE[c.id]?CAUSE[c.id][0]:'info','')}${clab(c.id)}<b>${c.n}</b></button>`).join('')}<label class="grp"><input type="checkbox" ${S.group?'checked':''} onchange="S.group=this.checked;paint()"> ${L('Group by cause','कारण से ग्रुप')}</label></div>`}
+function vFloor(){const R=laneRows(),cap=DB.capacity,hi=S.lang==='hi';
+ const tab=(k,l,b)=>`<button class="${R.lane===k?'on':''}" onclick="S.lane='${k}';paint()">${l}<b class="${b&&R.cnt[k]?b:''}">${R.cnt[k]}</b></button>`;
+ const top=DB.queue.filter(q=>q.funded).slice(0,5).map(q=>q.id);
+ const stageName=S.stage===null?'':S.stage==='held'?L('Held open','होल्ड पर'):S.stage==='done'?L('Closed','बंद'):stn(S.stage);
+ return`${kpiBand()}${pipeStrip()}<div class="split"><div class="panel"><div class="ph"><div class="seg" role="tablist">${tab('fix',L('Fix now','अभी ठीक करें'),'bad')}${tab('watch',L('Keep an eye','नज़र रखें'),'warn')}${tab('ok',L('On track','सही चल रहे'))}${tab('done',L('Finished','पूरे हुए'))}</div>
+ ${S.stage!==null?`<button class="chip brand" onclick="S.stage=null;paint()">${stageName} ${ic('x','')}</button>`:''}
+ <div class="sp"></div>${R.lane==='fix'&&top.length?`<button class="btn sm pri" onclick="doBulk(${JSON.stringify(top).replace(/"/g,'&quot;')})">${L('Do the top','टॉप')} ${top.length} ${L('recommended fixes','सुझाए समाधान करें')}</button>`:''}</div>
+ ${(R.lane==='fix'||R.lane==='watch')?causeStrip():''}
+ ${R.lane==='fix'?`<div class="cap">${ic('info','')}<span>${L('Ranked by value per rescue minute. Each hub has','मूल्य प्रति रेस्क्यू मिनट के हिसाब से। हर हब के पास हैं')} <b>${cap.per_hub} ${L('min','मिनट')}</b> ${L('this shift. Promise-keeping fixes always come first.','इस शिफ्ट में। वादा बचाने वाले काम पहले।')}</span></div>`:''}
+ <div class="pb" data-keep="queue">${R.rows.length?R.rows.slice(0,60).map((r,i)=>qrow(r,R.Q[r.id],i)).join(''):`<div class="empty">${ic('check')}<b>${R.lane==='fix'?L('Nothing needs you right now','अभी कुछ नहीं करना'):L('No parcels here','यहां कोई पार्सल नहीं')}</b>${R.lane==='fix'?L('Press play to move parcels along.','पार्सल आगे बढ़ाने के लिए प्ले दबाएं।'):''}</div>`}</div></div>
+ <div class="side">${alertsPanel()}${feedPanel()}</div></div>`}
+/* ---------- Parcels table ---------- */
+function vParcels(){const f=S.pf;let rows=DB.rows.filter(r=>(!f.q||(r.id+r.product+r.hub).toUpperCase().includes(f.q.toUpperCase()))&&(!f.lane||r.lane===f.lane)&&(!f.state||r.state===f.state));
+ const key={risk:r=>r.risk,slack:r=>r.slack,value:r=>r.value,stage:r=>r.stage,id:r=>r.id,ev:r=>r.rec_ev};rows=[...rows].sort((a,b)=>{const x=key[f.sort](a),y=key[f.sort](b);return(x>y?1:x<y?-1:0)*f.dir});
+ const th=(k,l,n)=>`<th class="s ${n?'n':''}" onclick="S.pf.dir=S.pf.sort==='${k}'?-S.pf.dir:-1;S.pf.sort='${k}';paint()">${l}${f.sort===k?(f.dir>0?' ▲':' ▼'):''}</th>`;
+ const st=['COMMITTED','IN-PIPELINE','STAGED','ATTEMPTING','HELD-OPEN','DELIVERED','RECOVERED','REVERSING'];
+ return`<div class="panel" style="height:100%"><div class="ph"><div class="field" style="min-width:230px">${ic('search')}<input placeholder="${L('Filter by ID, product, hub','ID, प्रोडक्ट, हब से छांटें')}" value="${esc(f.q)}" oninput="S.pf.q=this.value;pfPaint()" aria-label="Filter"></div>
+ <div class="seg">${[['',L('All','सभी')],['fix',L('Fix now','ठीक करें')],['watch',L('Keep an eye','नज़र')],['ok',L('On track','सही')],['done',L('Finished','पूरे')]].map(([k,l])=>`<button class="${f.lane===k?'on':''}" onclick="S.pf.lane='${k}';paint()">${l}</button>`).join('')}</div>
+ <label class="field"><select aria-label="State" onchange="S.pf.state=this.value;paint()"><option value="">${L('Any state','कोई भी स्थिति')}</option>${st.map(s=>`<option ${f.state===s?'selected':''}>${s}</option>`).join('')}</select></label>
+ <div class="sp"></div><span class="sub">${rows.length} ${L('parcels','पार्सल')}</span><button class="btn sm" onclick="exportCsv()">${ic('download')} CSV</button></div>
+ <div class="pb" data-keep="ptable"><table class="tbl"><thead><tr>${th('id',L('Parcel','पार्सल'))}<th>${L('Hub','हब')}</th><th>${L('Stop','पड़ाव')}</th>${th('value',L('Value','मूल्य'),1)}<th>${L('Pay','भुगतान')}</th>${th('risk',L('RTO risk','RTO जोखिम'),1)}${th('slack',L('Slack (min)','स्लैक (मिनट)'),1)}<th>${L('Gate','गेट')}</th><th>${L('Status','स्थिति')}</th><th>${L('Recommended','सुझाव')}</th>${th('ev',L('Expected value','अपेक्षित मूल्य'),1)}</tr></thead><tbody>
+ ${rows.slice(0,200).map(r=>`<tr class="r" onclick="openP('${r.id}')"><td><b>${r.id}</b><br><small>${esc(r.product)}</small></td><td>${r.hub}</td><td>${r.state==='HELD-OPEN'?L('Failed, held open','फेल, होल्ड'):r.stage_name}</td><td class="n">${inr(r.value)}</td><td>${r.payment}</td><td class="n">${pc(r.risk)}</td><td class="n" style="color:${r.slack<0&&!r.outcome?'var(--bad)':'inherit'}">${r.outcome?'-':r.slack}</td><td>G${r.gate}</td>
+ <td>${r.outcome?`<span class="chip ${OC[r.outcome]}">${outl(r.outcome)}</span>`:`<span class="chip ${r.lane==='fix'?'bad':r.lane==='watch'?'warn':'good'}">${r.lane==='fix'?L('Fix now','ठीक करें'):r.lane==='watch'?L('Keep an eye','नज़र'):L('On track','सही')}</span>`}</td><td>${r.rec_id?vb(r.rec_id):'-'}</td><td class="n">${r.rec_id?(r.rec_must?L('Required','ज़रूरी'):inr(r.rec_ev)):'-'}</td></tr>`).join('')}</tbody></table></div></div>`}
+function pfPaint(){const p=$('input[aria-label="Filter"]'),pos=p?p.selectionStart:0;paint();const n=$('input[aria-label="Filter"]');if(n){n.focus();n.setSelectionRange(pos,pos)}}
+function exportCsv(){const h=['id','hub','product','category','payment','value','state','stage','gate','risk','slack_min','outcome','recommended','expected_value'];const rows=DB.rows.map(r=>[r.id,r.hub,r.product,r.category,r.payment,r.value,r.state,r.stage_name,r.gate,r.risk,r.slack,r.outcome||'',r.rec_id||'',r.rec_ev].map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(','));
+ const b=new Blob([[h.join(',')].concat(rows).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='valmo_dice_parcels_synthetic.csv';a.click()}
+/* ---------- Rescue desk ---------- */
+function hcard(h){const pct=Math.max(0,Math.min(100,100*h.window_left_h/48)),cls=h.window_left_h<12?'low':h.window_left_h<24?'mid':'';const mx=Math.max(1,...h.decay.map(d=>d.v));const r=h.rec;
+ return`<div class="hc ${TRI[h.triage][2]==='info'?'blue':TRI[h.triage][2]==='warn'?'orange':'grey'}" onclick="openP('${h.id}')"><div class="row between"><b>${h.id}</b><span class="tag">${h.payment} ${inr(h.value)}</span></div>
+ <div><b>${rs(h.reason)}</b><div class="sub">${esc(h.product)}, ${h.hub}</div></div>
+ <div><div class="row between"><small>${L('Rescue window','रेस्क्यू विंडो')}</small><small><b>${Math.round(h.window_left_h)}h</b> ${L('left','बचे')}</small></div><div class="win ${cls}"><i style="width:${pct}%"></i></div></div>
+ <div class="row between" style="align-items:flex-end"><div><small>${L('Value if sold now','अभी बेचने पर मूल्य')}</small><div style="font-size:20px;font-weight:800">${inr(h.now_value)}</div></div>
+ <div class="decay" style="width:120px;margin-bottom:14px" title="${L('Value decays with time','समय के साथ मूल्य घटता है')}">${h.decay.map(d=>`<div style="height:${Math.max(6,100*d.v/mx)}%"><span>+${d.h}h</span></div>`).join('')}</div></div>
+ <div class="row"><span class="chip teal">${ic('users','')} ${h.demand.consumers} ${L('nearby buyers','आस-पास खरीदार')}</span><span class="chip teal">${ic('store','')} ${h.demand.retailers} ${L('retailers','दुकानदार')}</span>${h.home?`<span class="chip brand" title="${L('Another hub has open orders for this item','दूसरे हब में इस आइटम के ऑर्डर खुले हैं')}">${ic('route','')} ${h.home.hub.replace('LMDC ','')}: ${h.home.orders} ${L('orders','ऑर्डर')}, ${h.home.km} km</span>`:''}</div>
+ ${r?`<div class="na" style="margin-top:2px"><div class="nb"><small>${L('Now','अभी')}</small><b class="bad">${inr(120)}</b><span>${L('if nothing is done','कुछ न करें तो')}</span></div><i>\u2192</i><div class="nb ok"><small>${L('After','बाद में')}</small><b>${inr(120-r.ev)}</b><span>${L('expected cost','अपेक्षित लागत')}</span></div></div><button class="btn pri" onclick="event.stopPropagation();doAct('${h.id}')">${vb(r.id)}</button><div class="meta"><span>${L('Saves about ','बचत लगभग ')}${inr(r.ev)}</span><span>${pc(r.p)} ${L('works','सफल')}</span><button class="lk" onclick="event.stopPropagation();openP('${h.id}')">${L('Compare options','विकल्प देखें')}</button></div>`:`<button class="btn" onclick="event.stopPropagation();openP('${h.id}')">${L('Review','देखें')}</button>`}</div>`}
+function fwdBoard(R){const f=R.forwards||[];
+ return`<div class="card" style="margin-top:12px"><h2>${ic('route','')} ${L('Forward to demand: stock that can sell at another hub','मांग वाले हब पर भेजें: जो स्टॉक दूसरे हब में बिक सकता है')} <span class="chip brand">${f.length}</span> <span class="tag">${L('new idea, PROPOSED','नया विचार, प्रस्तावित')}</span></h2>
+ <p class="sub" style="margin-bottom:8px">${L('A failed parcel does not have to go back to the seller. If another hub has open orders for the same item, forward the parcel there. Compare with the Rs 120 return.','फेल पार्सल को सेलर के पास लौटाना ज़रूरी नहीं। जिस हब में इसी आइटम के ऑर्डर खुले हैं, वहां भेजें। ₹120 वापसी से तुलना करें।')}</p>
+ ${f.length?`<table class="tbl"><thead><tr><th>${L('Parcel (item)','पार्सल (आइटम)')}</th><th>${L('From','कहां से')}</th><th>${L('To','कहां')}</th><th class="n">${L('Distance','दूरी')}</th><th class="n">${L('Open orders','खुले ऑर्डर')}</th><th class="n">${L('Transit','समय')}</th><th class="n">${L('Forward cost','भेजने की लागत')}</th><th class="n">${L('Chance','संभावना')}</th><th class="n">${L('Expected gain','अपेक्षित फायदा')}</th><th></th></tr></thead><tbody>${f.map(x=>`<tr class="r" onclick="openP('${x.id}')"><td><b>${x.id}</b><br><small>${esc(x.sku)}</small></td><td>${x.from_hub.replace('LMDC ','')}</td><td><b>${x.to_hub.replace('LMDC ','')}</b></td><td class="n">${x.km} km</td><td class="n">${x.orders}</td><td class="n">${x.hrs} h</td><td class="n">${inr(x.cost)}</td><td class="n">${pc(x.p)}</td><td class="n"><b>${inr(x.net)}</b></td><td><button class="btn sm pri" onclick="event.stopPropagation();doAct('${x.id}','forward_stock')">${L('Forward','भेजें')}</button></td></tr>`).join('')}</tbody></table>`:`<p class="sub">${L('No held parcel has matching demand at another hub right now.','अभी किसी होल्ड पार्सल के लिए दूसरे हब में मांग नहीं है।')}</p>`}
+ <p class="note" style="margin-top:6px">${L('Open orders per hub are SYNTHETIC. Forward cost 8 + 0.045 per km and the chances are ASSUMED. Counts as Recover (stock kept), not as an RTO cut.','हब के खुले ऑर्डर सिंथेटिक हैं। लागत और संभावनाएं मान्यताएं हैं। यह Recover गिना जाता है, RTO कमी नहीं।')}</p></div>`}
+function vRescue(){const R=DB.rescue,by={BLUE:[],ORANGE:[],GREY:[]};R.held.forEach(h=>by[h.triage]&&by[h.triage].push(h));const green=DB.rows.filter(r=>r.state==='ATTEMPTING'&&!r.outcome).length;
+ const atStake=R.held.reduce((a,h)=>a+h.now_value,0),soon=R.held.length?Math.min(...R.held.map(h=>h.window_left_h)):null;
+ const col=(k,cls,t,d)=>`<div><div class="kh ${cls}">${t}<small>${by[k].length}</small></div><div class="kb" data-keep="k${k}">${by[k].length?by[k].map(hcard).join(''):`<div class="empty" style="padding:16px">${d}</div>`}</div></div>`;
+ return`<div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+ <div class="k"><div class="l">${L('Failed, held open','फेल, होल्ड पर')}</div><div class="v ${R.held.length?'':''}">${R.held.length}</div><div class="s">${L('Not returned yet: DICE picks the next best state','अभी वापस नहीं: अगला सबसे अच्छा कदम')}</div></div>
+ <div class="k"><div class="l">${L('Soonest rescue window closes in','सबसे पहले विंडो बंद होगी')}</div><div class="v ${soon!=null&&soon<12?'':''}" style="${soon!=null&&soon<12?'color:var(--bad)':''}">${soon==null?'-':Math.round(soon)+'<small>h</small>'}</div><div class="s">${L('Then it returns at full cost','फिर पूरी लागत पर वापस')}</div></div>
+ <div class="k"><div class="l">${L('Parcel value at stake','दांव पर पार्सल मूल्य')}</div><div class="v">${inr(atStake)}</div><div class="s">${L('If sold locally today','आज पास में बिके तो')}</div></div>
+ <div class="k"><div class="l">${L('Recovery futures','रिकवरी फ्यूचर्स')}</div><div class="v">${R.futures.n}</div><div class="s">${L('Likely to need local buyers tomorrow, about','कल पास के खरीदार चाहिए, लगभग')} ${inr(R.futures.value)}</div></div></div>
+ <div class="kan" style="margin-top:12px">${col('BLUE','blue',L('Change how we try','तरीका बदलें'),L('Nothing here. One failed try that can still be fixed lands here.','यहां कुछ नहीं। एक फेल कोशिश जो ठीक हो सकती है यहां आती है।'))}${col('ORANGE','orange',L('Rescue nearby','पास में बचाएं'),L('Nothing here. Refusals and second failures land here.','यहां कुछ नहीं। मना करने वाले और दूसरी बार फेल यहां आते हैं।'))}${col('GREY','grey',L('Let go, send back','वापस भेजें'),L('Nothing here. Damaged or no local demand lands here.','यहां कुछ नहीं। क्षतिग्रस्त या बिना मांग वाले यहां आते हैं।'))}</div>
+ ${fwdBoard(R)}<div class="grid g2" style="margin-top:12px"><div class="card"><h2>${ic('store','')} ${L('Sold nearby (recovery pool)','पास में बिके (रिकवरी पूल)')} <span class="chip brand">${R.recovered_n}</span></h2>
+ ${R.recovered.length?`<table class="tbl"><thead><tr><th>${L('Parcel','पार्सल')}</th><th>${L('Hub','हब')}</th><th class="n">${L('Value kept','बची वैल्यू')}</th></tr></thead><tbody>${R.recovered.map(x=>`<tr class="r" onclick="openP('${x.id}')"><td><b>${x.id}</b> <small>${esc(x.product)}</small></td><td>${x.via?L('Forwarded to ','भेजा गया ')+x.via:x.hub}</td><td class="n">${inr(x.kept)}</td></tr>`).join('')}</tbody></table>`:`<p class="sub">${L('No parcel has been sold locally yet.','अभी तक कोई पार्सल पास में नहीं बिका।')}</p>`}</div>
+ <div class="card"><h2>${ic('route','')} ${L('Planned reverse manifest','प्लान्ड रिवर्स मैनिफेस्ट')}</h2>${R.reverse.length?`<table class="tbl"><thead><tr><th>${L('Hub','हब')}</th><th class="n">${L('Parcels','पार्सल')}</th><th class="n">${L('Planned','प्लान्ड')}</th><th class="n">${L('Cost','लागत')}</th><th class="n">${L('Saved vs full','बचत')}</th></tr></thead><tbody>${R.reverse.map(g=>`<tr><td>${g.hub}</td><td class="n">${g.n}</td><td class="n">${g.planned}</td><td class="n">${inr(g.cost)}</td><td class="n">${inr(g.saved)}</td></tr>`).join('')}</tbody></table>`:`<p class="sub">${L('Nothing on reverse yet.','अभी कुछ रिवर्स पर नहीं।')}</p>`}
+ <p class="note" style="margin-top:8px">${L('Parcels wait in a 24-48h decision window so recovery and reverse are decided together. Planned reverse saves 15% of Rs 120 (ASSUMED).','पार्सल 24-48 घंटे रुकते हैं ताकि रिकवरी और रिवर्स साथ तय हों। प्लान्ड रिवर्स से 15% बचत (मान्यता)।')}</p></div></div>
+ <p class="note" style="margin-top:10px">${L(`Also ${green} parcels are out for delivery now (green: keep trying, no change needed).`,`इसके अलावा ${green} पार्सल अभी डिलीवरी पर हैं (हरा: कोशिश जारी)।`)} ${L('Triage rules: PROPOSED. Recovery values come from a model trained on synthetic data.','ट्राइएज नियम: प्रस्तावित। रिकवरी मूल्य सिंथेटिक डेटा पर बने मॉडल से।')}</p>`}
+/* ---------- Network ---------- */
+const LEVER=['Address confidence, contactability, promise-to-wave','Pickup timing, first-mile integrity','Release priority, consolidation','Route, connection, hub assignment','Partner choice, Hub-Fit','Sort priority, wave, rider pool','Regional lane, LMDC assignment','Rider, wave, customer option, payment','Door protocol, neighbour, payment rescue'];
+function vNetwork(){const st=DB.stages,cl=DB.clusters;
+ return`<div class="card"><h2>${L('Where parcels are right now','पार्सल अभी कहां हैं')}</h2><p class="sub" style="margin-bottom:10px">${L('Further along means more forward cost is already spent. At the LMDC the Rs 50 forward leg is fully sunk, so what is left to save is the Rs 120 reverse.','जितना आगे, उतनी आगे की लागत खर्च। LMDC पर ₹50 पूरी खर्च, यानी बचाने को ₹120 रिवर्स बचता है।')}</p>
+ <div class="stg">${st.map(s=>`<div class="sn ${s.risk?'hot':''}"><small>${stn(s.i)}</small><div class="n">${s.n}</div><small>${s.risk?`<b style="color:var(--bad)">${s.risk}</b> ${L('need action','कार्रवाई चाहिए')}`:L('all fine','सब ठीक')}</small><small>${inr(s.avoid)} ${L('still avoidable','अभी बचाने योग्य')}</small></div>`).join('')}</div></div>
+ <div class="grid g2" style="margin-top:12px"><div class="card"><h2>${L('Stop-by-stop economics','पड़ाव अनुसार अर्थशास्त्र')} <span class="tag">CASE-PACK</span></h2><table class="tbl"><thead><tr><th>${L('Stop','पड़ाव')}</th><th class="n">${L('Node cost','नोड लागत')}</th><th class="n">${L('Sunk','खर्च')}</th><th class="n">${L('Avoidable','बचाने योग्य')}</th><th>${L('DICE lever','DICE उपाय')}</th></tr></thead><tbody>${st.map(s=>`<tr><td>${stn(s.i)}</td><td class="n">${inr(s.cost)}</td><td class="n">${inr(s.sunk)}</td><td class="n">${inr(s.avoid)}</td><td><small>${LEVER[s.i]}</small></td></tr>`).join('')}</tbody></table>
+ <p class="note" style="margin-top:8px">${L('Value of turning a would-be RTO into a delivery stays at Rs 120 at every stop (case convention). Rs 170 is exposure, not savings.','RTO को डिलीवरी में बदलने का मूल्य हर पड़ाव पर ₹120 रहता है। ₹170 जोखिम है, बचत नहीं।')}</p></div>
+ <div class="card"><h2>${L('Hubs','हब')}</h2><table class="tbl"><thead><tr><th>${L('Hub','हब')}</th><th class="n">${L('Live','चालू')}</th><th class="n">${L('Fix','ठीक करें')}</th><th class="n">${L('Held','होल्ड')}</th><th class="n">${L('Avg risk','औसत जोखिम')}</th><th class="n">${L('Delivered','डिलीवर')}</th></tr></thead><tbody>${DB.hubs.map(h=>`<tr class="r" onclick="setHub('${h.city}')"><td><b>${h.hub}</b><br><small>${h.segment}</small></td><td class="n">${h.live}</td><td class="n" style="color:${h.fix?'var(--bad)':'inherit'};font-weight:${h.fix?800:500}">${h.fix}</td><td class="n">${h.held}</td><td class="n">${pc(h.avg_risk)}</td><td class="n">${h.delivered}</td></tr>`).join('')}</tbody></table></div></div>
+ <div class="grid g2" style="margin-top:12px"><div class="card"><h2>${L('Shared-cause alerts','साझा कारण अलर्ट')}</h2>${cl.length?cl.map(c=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><div><b>${c.hub}</b> <span class="chip ${c.sev==='high'?'bad':'warn'}">${c.n} ${L('parcels','पार्सल')}</span><br><small>${c.kind==='common_cause'?L('Off plan at Gate 2, same hub','गेट 2 पर प्लान से बाहर, एक ही हब'):L('Same failure reason: ','एक ही कारण: ')+rs(REASONS_L[c.reason]||c.reason)}</small></div><button class="btn sm pri" onclick="doBulk(${JSON.stringify(c.ids).replace(/"/g,'&quot;')})">${L('Apply fix to all','सब पर लगाएं')}</button></div>`).join(''):`<p class="sub">${L('No shared causes detected.','कोई साझा कारण नहीं मिला।')}</p>`}</div>
+ <div class="card"><h2>${L('Why context matters','संदर्भ क्यों ज़रूरी')} <span class="tag">DICE Context Layer</span></h2><table class="tbl"><tbody>
+ <tr><td>${L('Distance from LMDC','LMDC से दूरी')}</td><td>15% / 17% / 22% ${L('undelivered at 2 / 5 / 10+ km','2 / 5 / 10+ किमी पर')}</td><td><span class="tag">CASE-PACK</span></td></tr>
+ <tr><td>${L('Category (COD RTO)','कैटेगरी (COD RTO)')}</td><td>${L('Footwear 40.5%, ethnic wear 34.5%, baby 33.7%','फुटवियर 40.5%, एथनिक 34.5%, बेबी 33.7%')}</td><td><span class="tag">R1 DIRECTIONAL</span></td></tr>
+ <tr><td>${L('Region (sellers offering COD)','क्षेत्र (COD देने वाले सेलर)')}</td><td>${L('North about 30%, South about 21.4%','उत्तर लगभग 30%, दक्षिण 21.4%')}</td><td><span class="tag">R1 DIRECTIONAL</span></td></tr></tbody></table>
+ <p class="note" style="margin-top:8px">${L('These change which lever DICE picks for a parcel. They are not a blanket penalty on a category or region.','ये तय करते हैं कि DICE किस पार्सल पर कौन-सा उपाय चुने। किसी कैटेगरी या क्षेत्र पर सामूहिक दंड नहीं।')}</p></div></div>`}
+const REASONS_L={unavailable:'Customer unavailable',address:'Address / locatability',refused:'Customer refused',cod_cash:'COD cash unavailable',weak:'Weak attempt (integrity flag)',damaged:'Parcel damaged'};
+/* ---------- Outcomes / ledger ---------- */
+function vLedger(){const c=DB.counts,a=DB.analytics,k=DB.kpi,Lg=DB.ledger,tot=Object.values(c).reduce((x,y)=>x+y,0)||1,hi=S.lang==='hi';
+ const O=[['PREVENT',L('Prevent','रोका'),L('Delivered with no failed attempt because DICE changed a pre-attempt decision.','बिना फेल हुए डिलीवर, क्योंकि DICE ने पहले ही फैसला बदला।'),'Yes'],['SAVE',L('Save','बचाया'),L('Delivered after a failed attempt because of a DICE action.','फेल के बाद DICE की कार्रवाई से डिलीवर।'),'Yes'],
+ ['RECOVER',L('Recover','रिकवर'),L('Returned in name, but the unit was sold locally.','नाम को वापसी, पर पार्सल पास में बिका।'),'No'],['CHEAPER',L('Cheaper','सस्ता'),L('Returned, but at a planned, lower reverse cost.','वापस, पर प्लान्ड कम लागत पर।'),'No'],['RTO',L('Full-cost return','पूरी लागत वापसी'),L('Rescue window closed with no action, default reverse.','रेस्क्यू विंडो बंद, डिफ़ॉल्ट वापसी।'),'-']];
+ const mx=Math.max(1,...Lg.dna.map(d=>d.n));
+ return`<div class="grid g5">${O.map(([key,t,d,cnt])=>`<div class="card"><div class="row between"><b>${t}</b><span class="chip ${OC[key]}">${cnt==='Yes'?L('Counts as RTO cut','RTO कमी में गिना'):cnt==='No'?L('Not an RTO cut','RTO कमी नहीं'):L('Baseline','बेसलाइन')}</span></div><div style="font-size:34px;font-weight:800;margin:4px 0;color:var(--${key==='PREVENT'?'good':key==='SAVE'?'teal':key==='RECOVER'?'brand':key==='CHEAPER'?'warn':'bad'})">${c[key]}</div><p class="sub">${d}</p></div>`).join('')}</div>
+ <p class="note" style="margin:8px 2px">${L('The four outcomes are kept separate on purpose. Recovering inventory or making a return cheaper is not the same as reducing RTO.','चारों नतीजे अलग रखे गए हैं। इन्वेंटरी बचाना या वापसी सस्ती करना RTO घटाना नहीं है।')}</p>
+ <div class="grid g2" style="margin-top:6px"><div class="card"><h2>${L('Shift scoreboard','शिफ्ट स्कोरबोर्ड')} <span class="tag">${L('synthetic','सिंथेटिक')}</span></h2><div class="kv">
+ <span>${L('Delivered per 100 shipped','प्रति 100 शिप में डिलीवर')}</span><b>${k.deliv_per_100==null?'-':k.deliv_per_100}</b><span>${L('First-attempt success','पहली कोशिश में सफल')}</span><b>${k.first_attempt==null?'-':k.first_attempt+'%'}</b>
+ <span>${L('Cost per delivered order (case baseline Rs 84.8)','प्रति डिलीवर ऑर्डर लागत (केस बेसलाइन ₹84.8)')}</span><b>${k.cost_per_delivered==null?'-':inr(k.cost_per_delivered)}</b><span>${L('Parcels on plan','प्लान पर पार्सल')}</span><b>${k.on_plan}%</b>
+ <span>${L('Rescue spend','रेस्क्यू खर्च')}</span><b>${inr(a.spend)}</b><span>${L('Reverse cost avoided (Save, Recover, Cheaper)','रिवर्स लागत बची')}</span><b>${inr(a.reverse_avoided_resolved)}</b><span>${L('Reverse cost paid','रिवर्स लागत दी')}</span><b>${inr(a.reverse_paid)}</b>
+ <span>${L('Net on closed parcels (conservative)','बंद पार्सल पर नेट (सतर्क)')}</span><b>${inr(a.net)}</b>
+ <span>${L('Failed attempts recovered to delivery','फेल अटेम्प्ट जो डिलीवर हुए')}</span><b>${k.ndr_conv==null?'-':k.ndr_conv+'%'}</b><span>${L('Median hours from failure to first action','फेल से पहली कार्रवाई तक औसत घंटे')}</span><b>${k.resp_h==null?'-':k.resp_h+' h'}</b></div><p class="note" style="margin-top:8px">${a.note} ${L('Prevent is not credited in the net, so this understates DICE.','Prevent नेट में नहीं जुड़ा, इसलिए यह कम आंकता है।')}</p></div>
+ <div class="card"><h2>${L('Why deliveries failed (Failure DNA)','डिलीवरी क्यों फेल हुई')}</h2>${Lg.dna.length?`<div class="bars">${Lg.dna.map(d=>`<div class="bl"><span>${rs(d.reason)}</span><div class="b"><i style="width:${100*d.n/mx}%"></i></div><b>${d.n}</b></div>`).join('')}</div>`:`<p class="sub">${L('No failed attempts yet.','अभी कोई फेल अटेम्प्ट नहीं।')}</p>`}
+ <h3>${L('Guardrails we hold','जो सीमाएं हम मानते हैं')}</h3><div class="row"><span class="chip good">${L('Promise kept','वादा निभा')} ${k.on_plan}%</span><span class="chip">${L('No cut to rider earnings (additive pay only)','राइडर कमाई में कटौती नहीं')}</span><span class="chip">${L('One customer ask per stage','हर पड़ाव पर एक ही अनुरोध')}</span><span class="chip">${L('Payments only inside app / UPI','भुगतान केवल ऐप / UPI में')}</span></div></div></div>
+ <div class="grid g2" style="margin-top:12px"><div class="card"><h2>${L('Operator decisions','ऑपरेटर के फैसले')} <span class="tag">${L('audit trail','ऑडिट ट्रेल')}</span></h2><div class="row" style="margin-bottom:8px"><span class="chip good">${DB.dsum.worked} ${L('fixes worked','समाधान सफल')}</span><span class="chip bad">${DB.dsum.failed} ${L('did not work','सफल नहीं')}</span><span class="chip">${DB.dsum.kept} ${L('kept as is','जैसा है रखा')}</span></div>${DB.decisions.length?DB.decisions.slice(0,8).map(d=>`<div class="fd ${d.kind==='kept'?'':d.ok?'ok':'bad'}" onclick="openP('${d.id}')"><i></i><div>${d.kind==='kept'?L('Kept as it is','जैसा है रखा'):esc(d.name)+(d.ok?'':' ('+L('did not work','सफल नहीं')+')')}<small>${d.id} \u00B7 ${d.who} \u00B7 ${L('step','स्टेप')} ${d.tick}${d.kind==='acted'?` \u00B7 ${L('chance','संभावना')} ${pc(d.p)}, EV ${inr(d.ev)}`:''}</small></div></div>`).join(''):`<p class="sub">${L('Decisions you take appear here.','आपके फैसले यहां दिखेंगे।')}</p>`}</div>
+ <div class="card"><h2>${L('Seller delivery intelligence','सेलर डिलीवरी इंटेलिजेंस')} <span class="tag">M12</span></h2><table class="tbl"><thead><tr><th>${L('Category','कैटेगरी')}</th><th class="n">COD</th><th class="n">${L('Start risk','शुरुआती जोखिम')}</th><th>${L('Suggestion for the seller','सेलर के लिए सुझाव')}</th></tr></thead><tbody>${Lg.seller.map(s=>`<tr><td><b>${s.category}</b><br><small>${s.n} ${L('parcels','पार्सल')}</small></td><td class="n">${s.cod}%</td><td class="n">${s.risk}%</td><td><small>${s.action}</small></td></tr>`).join('')}</tbody></table><p class="note" style="margin-top:8px">${L('Guidance for the seller to decide, never automatic coercion.','सेलर के निर्णय के लिए सुझाव, अपने-आप थोपा नहीं जाता।')}</p></div>
+ <div class="card"><h2>${L('What DICE learned','DICE ने क्या सीखा')}</h2>${Lg.learn.length?Lg.learn.map(l=>`<div class="fd act" style="padding:6px 0" onclick="openP('${l.id}')"><i></i><div>${esc(l.txt)}<small>${l.id}</small></div></div>`).join(''):`<p class="sub">${L('Lessons appear when a parcel reaches an outcome.','पार्सल का नतीजा आने पर सीख यहां दिखती है।')}</p>`}</div></div>
+ <div class="grid g2" style="margin-top:12px"><div class="card"><h2>${L('Case cohort for reference','संदर्भ के लिए केस कोहोर्ट')} <span class="tag">CASE-PACK</span></h2><p class="sub">100 ${L('orders: 80 COD at 20% RTO plus 20 prepaid at 5% gives','ऑर्डर: 80 COD पर 20% RTO और 20 प्रीपेड पर 5% से')} <b>17 RTO</b>. ${L('Reverse burden','रिवर्स बोझ')} 17 x Rs 120 = <b>Rs 2,040</b>. ${L('Forward plus reverse exposure per RTO is Rs 170, which is exposure and not savings.','हर RTO पर आगे + रिवर्स ₹170 जोखिम है, बचत नहीं।')}</p><p class="note" style="margin-top:6px">${L('Reason mix (32/19/17/12/9/7/4%) is a working estimate from Round 1 research, not a Valmo measurement.','कारणों का मिश्रण राउंड 1 शोध का अनुमान है, Valmo का माप नहीं।')}</p></div>
+ <div class="card"><h2>${L('Model card','मॉडल कार्ड')} <span class="tag">SYNTHETIC</span></h2><div class="kv"><span>${L('RTO model AUC (synthetic holdout)','RTO मॉडल AUC (सिंथेटिक)')}</span><b>${META.rto_auc_holdout}</b><span>${L('ETA error (hours)','ETA त्रुटि (घंटे)')}</span><b>${META.eta_mae_hours}</b><span>${L('Recovery value error','रिकवरी मूल्य त्रुटि')}</span><b>${inr(META.recovery_mae_inr)}</b><span>${L('Trained on','प्रशिक्षण')}</span><b>${META.n_orders.toLocaleString('en-IN')} ${L('synthetic orders','सिंथेटिक ऑर्डर')}</b></div><p class="note" style="margin-top:8px">${META.disclaimer}</p>
+ <div class="row" style="margin-top:8px"><span class="tag">CASE-PACK</span><span class="tag">ASSUMED</span><span class="tag">PROPOSED</span><span class="tag">SYNTHETIC</span><span class="tag">UNKNOWN</span><small>${L('Every number carries one of these evidence tags.','हर संख्या पर इनमें से एक प्रमाण टैग है।')}</small></div></div></div>`}
+/* ---------- Parcel 360 drawer ---------- */
+function spark(vals){const v=vals.filter(x=>x!=null);if(v.length<2)return'';const W=120,H=34,mx=Math.max(20,...v),pts=v.map((x,i)=>[i*(W/(v.length-1)),H-2-(H-6)*x/mx]);return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-label="Risk over the journey"><path class="sk" d="M${pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join('L')}"/><circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="3" fill="var(--brand)"/></svg>`}
+function nothing(d){const hi=S.lang==='hi',sl=Math.max(0,-d.eta.slack_min);
+ if(d.state==='HELD-OPEN')return hi?'रेस्क्यू विंडो खत्म होगी और पार्सल पूरी लागत (₹120) पर वापस जाएगा।':'The rescue window runs out and the parcel goes back at full cost (Rs 120).';
+ if(d.gate===1)return hi?`पार्सल गेट 1 पर अटका रहेगा और आगे नहीं जा सकेगा। RTO जोखिम ${pc(d.risk)} रहेगा।`:`The parcel stays locked at Gate 1 and cannot move on. RTO risk stays at ${pc(d.risk)}.`;
+ if(d.gate===2)return hi?`अनुमान वादे से ${sl} मिनट आगे खिसकेगा। RTO जोखिम ${pc(d.risk)} रहेगा।`:`The forecast slips ${sl} min past the promise. RTO risk stays at ${pc(d.risk)}.`;
+ return hi?`पार्सल ऐसे राइडर के साथ जाएगा जो इलाके से अनजान है। जोखिम ${pc(d.risk)} रहेगा।`:`The parcel goes out with a rider who is a poor fit for this area. RTO risk stays at ${pc(d.risk)}.`}
+function phone(d){const s=d.stage,steps=[L('Ordered','ऑर्डर हुआ'),L('Picked up','उठाया गया'),L('Sorting and in transit','सॉर्टिंग और रास्ते में'),L('On the way to your city','आपके शहर की ओर'),L('Out for delivery','डिलीवरी के लिए निकला'),L('Delivered','डिलीवर हुआ')],cur=s===0?0:s<3?1:s<7?2:s===7?3:s===8?4:5,ok=d.outcome==='PREVENT'||d.outcome==='SAVE';
+ const msg=d.state==='HELD-OPEN'?L("We couldn't complete this attempt. We're arranging the best way to get it to you.",'यह अटेम्प्ट पूरा नहीं हो सका। हम आप तक पहुंचाने का सबसे अच्छा तरीका ढूंढ रहे हैं।'):d.outcome==='RECOVER'||d.outcome==='CHEAPER'||d.outcome==='RTO'?L('Your order could not be delivered. Any payment is handled per policy.','आपका ऑर्डर डिलीवर नहीं हो सका। भुगतान नीति अनुसार होगा।'):ok?L('Delivered. Thank you for shopping with Meesho.','डिलीवर हुआ। Meesho से खरीदारी के लिए धन्यवाद।'):d.stage===0&&!d.gate_ok?L("We're confirming your address details for a smooth delivery.",'सुगम डिलीवरी के लिए हम आपका पता पक्का कर रहे हैं।'):L(`We're coordinating delivery for your ${d.window} window.`,`हम आपके ${d.window} समय के लिए डिलीवरी तय कर रहे हैं।`);
+ return`<div class="phone"><div class="hd">meesho</div><small>#${d.id}</small><div><b>${esc(d.product)}</b> <small>${inr(d.value)} ${d.payment}</small></div><div class="eta">${L('Arriving by','पहुंचेगा')} ${d.eta.promised}</div><small>${L('Forecast','अनुमान')} ${d.eta.forecast}, ${pc(d.eta.conf)} ${L('confidence','भरोसा')}</small>
+ <div style="margin:8px 0">${steps.map((t,i)=>`<div class="ps ${i<cur||ok?'d':i===cur?'c':''}"><i></i>${t}</div>`).join('')}</div><p>${msg}</p><small>${L('Customers never see an RTO percentage.','ग्राहक को RTO प्रतिशत कभी नहीं दिखता।')}</small></div>`}
+function drawer(){if(!D)return`<aside class="dr"><div class="empty" style="margin:auto">${L('Loading parcel...','पार्सल लोड हो रहा है...')}</div></aside>`;
+ const d=D,e=d.econ,t=d.eta,rec=d.rec,hi=S.lang==='hi',r=rowOf(d.id)||{lane:d.health==='At Risk'?'fix':'ok'};const s=say({...r,...d,lane:r.lane,window_left_h:d.failure?d.failure.window_left_h:null});
+ const G=[['Reachable','पहुंच'],['On plan','प्लान पर'],['Ready','तैयार'],['Handover','हैंडओवर'],['Changed?','बदलाव?'],['Recover','रिकवर'],['Reverse','रिवर्स']];
+ const mx=Math.max(1,...Object.values(d.contrib));const must=rec&&rec.clears;
+ return`<aside class="dr" role="dialog" aria-label="Parcel ${d.id}"><div class="dh"><div class="row between"><div class="row"><h2 style="font-size:20px;font-weight:800">${d.id}</h2>${d.outcome?`<span class="chip ${OC[d.outcome]}">${outl(d.outcome)}</span>`:d.triage&&d.state==='HELD-OPEN'?`<span class="chip ${TRI[d.triage][2]}">${TRI[d.triage][S.lang==='hi'?1:0]}</span>`:`<span class="chip ${d.health==='At Risk'?'bad':d.health==='Watch'?'warn':'good'}">${d.health==='At Risk'?L('Needs action','कार्रवाई चाहिए'):d.health==='Watch'?L('Keep an eye','नज़र रखें'):d.health==='Resolved'?L('Closed','बंद'):L('On track','सही चल रहा')}</span>`}</div><button class="ib" onclick="closeP()" aria-label="Close">${ic('x')}</button></div>
+ <div class="sub">${esc(d.product)}, ${d.hub}, ${inr(d.value)} ${d.payment}, ${d.category}, ${d.distance_km} km ${L('from hub','हब से')}</div></div>
+ <div class="db">
+ <div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><div class="prob ${s.tone}" style="font-size:15px">${ic(s.ic)}<span>${s.txt}</span></div><div style="text-align:right;flex:none"><div style="font-size:26px;font-weight:800;line-height:1">${pc(d.risk)}</div><small>${L('RTO risk, started at','RTO जोखिम, शुरू में')} ${pc(d.risk0)}</small></div></div>
+ ${decisionBlock(d)}
+ <div class="blk"><h3>${L('Gates: each one unlocks the next','गेट: हर एक अगले को खोलता है')}</h3><div class="gs">${G.map((g,i)=>{const n=i+1,cur=n===d.gate&&!d.outcome,dn=n<d.gate||(d.outcome&&n<5);return`<div class="g1 ${dn?'done':cur?'cur '+(d.gate_ok?'ok':''):''}"><b>${dn?'✓':cur?(d.gate_ok?'✓':'!'):n}</b>${g[hi?1:0]}</div>`}).join('')}</div><p class="sub" style="margin-top:8px"><b>G${d.gate} ${d.gate_name}:</b> ${d.gate_ok?L('cleared','साफ़'):L('locked','बंद')}. ${esc(d.gate_why)}</p></div>
+ ${d.failure?failureBlock(d):''}
+ <div class="blk"><div class="row between"><h3 style="margin:0">${L('Delivery promise (Wave Sync)','डिलीवरी वादा (Wave Sync)')}</h3>${spark(d.nodes.map(n=>n.risk))}</div><div class="row" style="gap:22px;margin-top:6px"><div><small>${L('Promised','वादा')}</small><div style="font-size:18px;font-weight:800">${t.promised}</div></div><div><small>${L('Forecast','अनुमान')}</small><div style="font-size:18px;font-weight:800">${t.forecast}</div></div><div><small>${L('Slack','स्लैक')}</small><div style="font-size:18px;font-weight:800;color:var(--${t.slack_min<0?'bad':'good'})">${t.slack_min>=0?'+':''}${t.slack_min} ${L('min','मिनट')}</div></div><div><small>${L('Rescue deadline','रेस्क्यू डेडलाइन')}</small><div style="font-size:18px;font-weight:800">${t.deadline}</div></div></div>
+ <small>${L('Confidence','भरोसा')} ${pc(t.conf)}, ${t.remaining_h}h ${L('remaining','बाकी')}. ${L('Risk line above: RTO risk at each stop reached.','ऊपर की रेखा: हर पड़ाव पर RTO जोखिम।')}</small></div>
+ <div class="blk"><h3>${L('Journey','सफ़र')}</h3>${d.nodes.map(n=>`<div class="jn ${n.status}"><i></i><span>${stn(Math.min(n.idx,8))==='' ?n.name:(n.idx<9?stn(n.idx):L('Delivered','डिलीवर'))}${n.risk!=null?` <small>${n.risk}%</small>`:''}</span><small>${n.actual?`${n.actual}${n.delta!=null?` (${n.delta>=0?'+':''}${n.delta} ${L('min','मिनट')})`:''}`:L('plan','प्लान')+' '+n.planned}<br>${inr(n.sunk)} ${L('sunk','खर्च')}, ${inr(n.avoid)} ${L('avoidable','बचाने योग्य')}</small></div>`).join('')}</div>
+ <div class="grid g2"><div class="blk"><h3>${L('What is driving the risk','जोखिम किससे बढ़ रहा')}</h3>${Object.entries(d.contrib).length?`<div class="bars">${Object.entries(d.contrib).map(([k,v])=>`<div class="bl" style="grid-template-columns:78px 1fr 46px"><span>${k.replace('_',' ')}</span><div class="b"><i style="width:${100*v/mx}%"></i></div><b>${v}pp</b></div>`).join('')}</div>`:`<small>${L('Nothing material.','कुछ खास नहीं।')}</small>`}<small>${L('Model estimate of the drop if each factor were good. Not causal.','अनुमान: हर कारक ठीक होने पर कमी। कारण-प्रभाव नहीं।')}</small></div>
+ <div class="blk"><h3>${L('Money','पैसा')}</h3><div class="kv"><span>${L('Forward sunk','आगे की खर्च')}</span><b>${inr(e.sunk)}</b><span>${L('Forward avoidable','बचाने योग्य')}</span><b>${inr(e.avoidable)}</b><span>${L('Reverse if RTO','RTO पर रिवर्स')}</span><b>${inr(e.reverse)}</b><span>${L('Ceiling','अधिकतम')}</span><b>${inr(e.ceiling)}</b><span>${L('Expected reverse','अपेक्षित रिवर्स')}</span><b>${inr(e.exp_reverse)}</b><span>${L('Spent so far','अब तक खर्च')}</span><b>${inr(e.spent)}</b></div></div></div>
+ <details class="blk"><summary>${ic('phone','')} ${L('What the customer sees','ग्राहक क्या देखता है')}</summary>${phone(d)}</details>
+ <details class="blk"><summary>${L('What-if (model simulation)','व्हाट-इफ (मॉडल सिमुलेशन)')}</summary><div class="row"><button class="btn sm" onclick="wi('addr=.1')">${L('Address +10pp','पता +10pp')}</button><button class="btn sm" onclick="wi('window=.2')">${L('Window fit +20pp','समय मेल +20pp')}</button><button class="btn sm" onclick="wi('rider=.1')">${L('Rider fit +10pp','राइडर मेल +10pp')}</button><button class="btn sm" onclick="wi('partner=.1')">${L('Partner +10pp','पार्टनर +10pp')}</button></div><p id="wi" class="sub" style="margin-top:8px"></p></details>
+ <details class="blk"><summary>${L('History','इतिहास')}</summary><div class="seg" style="margin-bottom:8px"><button class="${S.tab==='dj'?'on':''}" onclick="S.tab='dj';paint()">${L('Decisions','फैसले')}</button><button class="${S.tab==='log'?'on':''}" onclick="S.tab='log';paint()">${L('Engine log','इंजन लॉग')}</button><button class="${S.tab==='ev'?'on':''}" onclick="S.tab='ev';paint()">${L('Events','घटनाएं')}</button><button class="${S.tab==='ln'?'on':''}" onclick="S.tab='ln';paint()">${L('Learned','सीखा')}</button></div>
+ <div class="tl">${(S.tab==='dj'?(d.decisions||[]).map(x=>({t:x.t,txt:x.kind==='kept'?`Kept as it is (${x.who})${x.ev>0?`, best alternative was worth Rs ${x.ev}`:''}`:`${x.name}: ${x.ok?'worked':'did not work'+(x.why?' ('+x.why+')':'')} (${x.who}, chance ${Math.round(x.p*100)}%, EV Rs ${x.ev}, cost Rs ${x.cost})`})):S.tab==='log'?d.log:S.tab==='ev'?d.events:d.learn.map(x=>({t:'',txt:x}))).map(x=>`<div>${x.t?`<b>${x.t}</b> `:''}${esc(x.txt)}</div>`).join('')||'<small>-</small>'}</div></details>
+ <details class="blk"><summary>${L('Simulation tools (prototype only)','सिमुलेशन टूल (केवल प्रोटोटाइप)')}</summary><p class="sub" style="margin-bottom:8px">${L('A real hub would not have these. Use them to create a problem on this parcel.','असली हब में ये नहीं होंगे। इस पार्सल पर समस्या बनाने के लिए इस्तेमाल करें।')}</p>
+ <div class="row" style="margin-bottom:8px"><button class="btn sm pri" onclick="simEvent('advance')">${L('Move one stop','एक पड़ाव आगे')}</button><button class="btn sm" onclick="toDoor()">${L('Take to the door','दरवाज़े तक ले जाएं')}</button></div>
+ <div class="row">${[['delay','Delay +5h','देरी +5 घंटे'],['weather','Weather','मौसम'],['address','Address problem','पता समस्या'],['rider','Rider mismatch','राइडर मेल नहीं'],['wronghub','Wrong hub','गलत हब'],['phone','Phone unreachable','फोन बंद']].map(([k,a,b])=>`<button class="btn sm" onclick="simEvent('${k}')">${L(a,b)}</button>`).join('')}</div>
+ <p class="note" style="margin:8px 0 4px">${L('At the door only:','सिर्फ़ दरवाज़े पर:')}</p><div class="row">${[['deliver','Delivered','डिलीवर'],['unavailable','Not home','घर पर नहीं'],['refused','Refuses','मना'],['cod_cash','No cash','कैश नहीं'],['weak','Weak attempt','कमज़ोर अटेम्प्ट'],['damaged','Damaged','क्षतिग्रस्त']].map(([k,a,b])=>`<button class="btn sm" onclick="simEvent('${k}')">${L(a,b)}</button>`).join('')}</div></details>
+ </div></aside>`}
+
+/* ---------- decision block: what is happening now, what each option changes, what it costs ---------- */
+function dxTxt(p){if(S.lang!=='hi'||!CAUSE[p.id]||!CAUSE[p.id][3])return p.headline;return CAUSE[p.id][3]}
+function dl(v,ref,hb,f){if(ref==null||v==null)return'';const d=v-ref;if(Math.abs(d)<(f||.005))return'';return(hb?d>0:d<0)?'good':'bad'}
+function decisionBlock(d){const hi=S.lang==='hi';
+ if(d.outcome)return`<div class="do"><b>${L('Closed:','बंद:')} ${outl(d.outcome)}</b><p class="sub">${esc((d.learn||[])[0]||'')}</p></div>`;
+ const dec=d.decision,now=dec.now,post=now.kind==='post',dg=d.diag||[],pr=dg[0],vd=dec.verdict,all=S.allOpts,opts=all?dec.options:dec.options.slice(0,4),best=dec.options.find(o=>o.best);
+ const others=dg.slice(1);
+ const dx=pr?`<div class="dx ${pr.block?'blk':''}"><div class="dxh">${ic(CAUSE[pr.id]?CAUSE[pr.id][0]:'info')}<div><small>${L('What is wrong','क्या गड़बड़ है')}</small><b>${esc(dxTxt(pr))}</b><span>${esc(pr.evidence)}</span></div></div>${others.length?`<div class="row" style="margin-top:6px"><small>${L('Also','साथ में')}:</small>${others.map(o=>`<span class="cz ${o.block?'bad':'warn'}" title="${esc(o.evidence)}">${clab(o.id)}</span>`).join('')}</div>`:''}</div>`:'';
+ const vtxt=hi?(best?`${best.must?'अभी करें':'करना फायदेमंद'}: ${vb(best.id)}. अपेक्षित लागत ${inr(now.exp_cost)} से ${inr(best.exp.cost_total)}, ${pc(best.p)} संभावना।`:'जैसा है वैसा रखें। किसी विकल्प से फायदा नहीं।'):vd.text;
+ const nowStrip=post?`<div class="ns"><div><small>${L('Status','स्थिति')}</small><b>${L('Failed, held open','फेल, होल्ड पर')}</b></div><div><small>${L('Rescue window','रेस्क्यू विंडो')}</small><b>${Math.round(now.window_left_h)}h ${L('left','बचे')}</b></div><div><small>${L('Value if sold now','अभी बेचने पर')}</small><b>${inr(now.value_now)}</b></div><div><small>${L('Cost if nothing is done','कुछ न करें तो लागत')}</small><b class="bad">${inr(now.exp_cost)}</b></div></div>`
+  :`<div class="ns"><div><small>${L('Where it is','कहां है')}</small><b>${now.stage}</b><span>${now.hub}</span></div><div><small>${L('Arrives / promised','पहुंचेगा / वादा')}</small><b>${now.eta}</b><span>${now.promised}</span></div><div><small>${L('Slack','स्लैक')}</small><b class="${now.slack_min<0?'bad':''}">${sgn(now.slack_min)} ${L('min','मिनट')}</b><span>${L('promise kept','वादा निभे')} ${pc(now.conf)}</span></div><div><small>${L('RTO risk','RTO जोखिम')}</small><b>${pc(now.risk)}</b><span>${L('expected cost','अपेक्षित लागत')} ${inr(now.exp_cost)}</span></div></div>`;
+ const H=(o)=>o.id==='hold';
+ const what=o=>H(o)?`<div>${post?L('Nothing changes. The window keeps running.','कुछ नहीं बदलता। विंडो चलती रहती है।'):L('Nothing changes.','कुछ नहीं बदलता।')}</div>`:(o.where?`<div>${esc(o.where.frm)}</div><div class="arw">\u2193</div><div><b>${esc(o.where.to)}</b></div>${o.where.how?`<small>${esc(o.where.how)}</small>`:''}`:`<small>${esc(o.does)}</small>`);
+ const R=[];
+ R.push([L('What changes','क्या बदलता है'),what]);
+ R.push([L('Chance it works','सफल होने की संभावना'),o=>H(o)?'-':`<b>${pc(o.p)}</b>${o.breakeven_p!=null&&!o.must?`<small>${L('pays off above','फायदा इससे ऊपर')} ${pc(o.breakeven_p)}</small>`:''}`]);
+ if(!post){
+  R.push([L('Slack against promise','वादे के मुकाबले स्लैक'),o=>{const v=o.after.slack_min;return`<b class="${dl(v,now.slack_min,true,1)}">${sgn(v)} ${L('min','मिनट')}</b>${H(o)?`<small>${L('in 3 more hours','3 घंटे बाद')}</small>`:`<small>${L('now','अभी')} ${sgn(now.slack_min)}</small>`}`}]);
+  R.push([L('Arrives','पहुंचेगा'),o=>`<b>${o.after.eta}</b>${H(o)?'':`<small>${L('now','अभी')} ${now.eta}</small>`}`]);
+  R.push([L('Promise kept','वादा निभे'),o=>`<b class="${dl(o.after.conf,now.conf,true,.01)}">${pc(o.after.conf)}</b>${H(o)?'':`<small>${L('now','अभी')} ${pc(now.conf)}</small>`}`]);
+  R.push([L('RTO risk','RTO जोखिम'),o=>`<b class="${dl(o.after.risk,now.risk,false,.005)}">${pc(o.after.risk)}</b>${H(o)?`<small>${L('in 3 more hours','3 घंटे बाद')}</small>`:`<small>${L('now','अभी')} ${pc(now.risk)}</small>`}`]);
+ }else{
+  R.push([L('If it works','सफल हो तो'),o=>H(o)?`<b class="bad">${esc(o.after.status)}</b>`:`<b>${esc(o.after.status)}</b>`]);
+  R.push([L('Cost if it works','सफल हो तो लागत'),o=>`<b>${inr(o.after.exp_cost)}</b>${H(o)?'':`<small>${L('vs','बनाम')} ${inr(now.exp_cost)}</small>`}`]);
+ }
+ R.push([L('Cost to do it','करने की लागत'),o=>H(o)?'-':`${inr(o.cost)}<small>${o.mins} ${L('rescue min','रेस्क्यू मिनट')}${o.cap?`, ${o.seats} ${L('of','में से')} ${o.cap} ${L('seats','सीट')}`:''}</small>`]);
+ R.push([L('Expected total cost','अपेक्षित कुल लागत'),o=>`<b class="big ${H(o)?'':dl(o.exp.cost_total,now.exp_cost,false,.5)}">${inr(o.exp.cost_total)}</b><small>${L('chance-weighted, incl. action cost','संभावना-भारित, कार्रवाई लागत सहित')}</small>`]);
+ R.push([L('Gain vs keeping as it is','जैसा है रखने से फायदा'),o=>H(o)?'-':`<b class="big ${o.exp.gain>0?'good':o.must?'':'bad'}">${o.exp.gain>=0?'+':'-'}${inr(Math.abs(o.exp.gain))}</b>${o.must&&o.exp.gain<=0?`<small>${L('required to keep the promise','वादा निभाने के लिए ज़रूरी')}</small>`:''}`]);
+ R.push([L('If it fails','विफल हो तो'),o=>o.fail?`<small>${esc(o.fail.text)}</small>`:'-']);
+ if(post)R.push([L('If you wait 12 hours','12 घंटे रुकें तो'),o=>H(o)?`<small>${L('Every option gets less likely','हर विकल्प कम संभावित होता जाता है')}</small>`:`<small>${o.wait?esc(o.wait.note):'-'}</small>`]);
+ const selId=(opts.find(o=>o.id===S.optSel)||best||opts.find(o=>!H(o))||opts[0]).id;
+ const th=`<tr><th></th>${opts.map(o=>`<th class="clk ${o.best?'best':''} ${H(o)?'hold':''} ${o.id===selId?'sel':''}" onclick="S.optSel='${o.id}';paint()" title="${L('Click for exact details','सटीक विवरण के लिए क्लिक करें')}">${o.best?`<span class="rec">${L('Recommended','सुझाया')}</span>`:(o.must&&!H(o))?`<span class="req">${L('Required','ज़रूरी')}</span>`:''}<b>${H(o)?L('Keep as it is','जैसा है रखें'):vb(o.id)}</b><small>${H(o)?'':(o.module==='EXT'?L('new idea','नया विचार'):o.module)}</small><span class="dl">${L('details','विवरण')} \u25BE</span></th>`).join('')}</tr>`;
+ const body=R.map(([l,f])=>`<tr><th class="rl">${l}</th>${opts.map(o=>`<td class="${o.best?'best':''}">${f(o)}</td>`).join('')}</tr>`).join('');
+ const acts=`<tr><th></th>${opts.map(o=>`<td class="${o.best?'best':''}">${H(o)?`<button class="btn sm" onclick="doHold('${d.id}')">${L('Keep 3 steps','3 स्टेप रखें')}</button>`:`<button class="btn sm ${o.best?'pri':''}" onclick="doAct('${d.id}','${o.id}')">${L('Do this','यह करें')}</button>`}</td>`).join('')}</tr>`;
+ const un=(dec.unavailable||[]).map(u=>`<div class="un">${ic('info','')} <b>${vb(u.id)}</b>: ${esc(u.why)}</div>`).join('');
+ return`${dx}<div class="vd ${vd.kind==='ACT'?(best&&best.must?'must':'act'):'keep'}"><b>${vd.kind==='ACT'?(best&&best.must?L('Required','ज़रूरी'):L('Worth doing','करना फायदेमंद')):L('Keep as it is','जैसा है रखें')}</b><span>${esc(vtxt)}</span>${d.hold_left>0?`<span class="chip">${L('You kept it as is for','आपने जैसा है रखा')} ${d.hold_left} ${L('more steps','और स्टेप')}</span>`:''}</div>
+ <div class="blk"><h3>${L('Right now','अभी क्या हो रहा है')}</h3>${nowStrip}<p class="sub" style="margin-top:6px">${esc(now.text)}</p></div>
+ <div class="blk"><div class="row between"><h3 style="margin:0">${L('Compare before you decide','फैसले से पहले तुलना करें')}</h3><div class="row"><button class="btn sm" onclick="S.whyOpen=true;paint()">${ic('info')} ${L('How this is calculated','यह कैसे निकला')}</button></div></div>
+ <div class="cmp"><table class="ct"><thead>${th}</thead><tbody>${body}${acts}</tbody></table></div>
+ ${optPanel(dec.options.find(o=>o.id===selId),d,dec)}
+ ${dec.options.length>4?`<button class="lk" style="margin-top:6px" onclick="S.allOpts=!S.allOpts;paint()">${all?L('Show fewer options','कम विकल्प दिखाएं'):L(`Show all ${dec.options.length} options`,`सभी ${dec.options.length} विकल्प दिखाएं`)}</button>`:''}${un}
+ <p class="note" style="margin-top:8px">${L('Chances and costs are ASSUMED. Ideas marked "new idea" come from market research and are PROPOSED. Money is the case convention: return costs Rs 120, and Rs 50 forward is sunk or paid either way.','संभावनाएं और लागत मान्यताएं हैं। "नया विचार" बाज़ार शोध से है और प्रस्तावित है। पैसा केस के हिसाब से: वापसी ₹120, आगे का ₹50 दोनों हाल में लगता है।')}</p></div>`}
+
+function optPanel(o,d,dec){if(!o)return'';const dt=o.detail;if(!dt)return'';const hi=S.lang==='hi',isH=o.id==='hold';
+ const ft=dt.frm?`<div class="ft"><div><small>${L('From (now)','अभी')}</small><b>${esc(dt.frm)}</b></div><i>\u2192</i><div class="to"><small>${L('To (after)','बाद में')}</small><b>${esc(dt.to)}</b></div></div>${dt.how?`<div class="row" style="margin-top:6px"><span class="chip teal">${esc(dt.how)}</span></div>`:''}`:'';
+ const kv=dt.specs&&dt.specs.length?`<div class="kv2">${dt.specs.map(([k,v])=>`<span>${esc(k)}</span><b>${esc(v)}</b>`).join('')}</div>`:'';
+ const cd=dt.cands?`<div class="cmp" style="margin-top:8px"><table class="ct cd"><thead><tr>${dt.cands.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${dt.cands.rows.map((r,i)=>`<tr class="${i===0?'first':''}">${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${dt.cands.note?`<p class="note" style="margin-top:4px">${esc(dt.cands.note)}</p>`:''}`:'';
+ return`<div class="opd"><div class="row between"><h3 style="margin:0">${L('Exact details','सटीक विवरण')}: ${isH?L('Keep as it is','जैसा है रखें'):vb(o.id)}</h3><span class="chip">${o.evidence||'-'}</span></div>
+ ${isH?'':`<p class="sub" style="margin:6px 0">${esc(o.does)}</p>`}${ft}${dt.cutoff?`<div class="cutoff">${ic('clock','')} ${esc(dt.cutoff)}</div>`:''}${kv}${cd}${dt.note?`<p class="note" style="margin-top:6px">${esc(dt.note)}</p>`:''}
+ ${!isH&&o.id!=='hold'?`<div class="row" style="margin-top:8px"><button class="btn sm pri" onclick="doAct('${d.id}','${o.id}')">${L('Do this','यह करें')}</button></div>`:''}
+ <p class="note" style="margin-top:6px">${L('Names, places, slots and partners are SYNTHETIC (invented for the prototype). Chances and costs are ASSUMED.','नाम, जगहें, स्लॉट और पार्टनर सिंथेटिक (काल्पनिक) हैं। संभावनाएं और लागत मान्यताएं हैं।')}</p></div>`}
+function failureBlock(d){const f=d.failure,rc=f.recovery,hi=S.lang==='hi',tri=TRI[f.triage],mx=Math.max(1,...rc.decay.map(x=>x.v));
+ const exp={BLUE:L('One failed try that can still be fixed. Change how we try: new time, rider, nominee or payment.','एक फेल कोशिश जो ठीक हो सकती है। तरीका बदलें: नया समय, राइडर, नॉमिनी या भुगतान।'),ORANGE:L('Home delivery is unlikely or not worth it. Rescue nearby: local buyer, retailer or pickup point.','घर पर डिलीवरी कठिन है। पास में बचाएं: खरीदार, दुकानदार या पिकअप।'),GREY:L('Little recovery value or no local demand. Let go and send back in a planned batch.','रिकवरी मूल्य कम या मांग नहीं। प्लान्ड बैच में वापस भेजें।')}[f.triage];
+ return`<div class="blk" style="border-color:#f0b1b9"><div class="row between"><h3 style="margin:0">${L('Failed, not returned yet','फेल, अभी वापस नहीं')}</h3><span class="chip ${tri[2]}">${tri[hi?1:0]}</span></div><p class="sub" style="margin:6px 0">${exp}</p>
+ <div class="kv"><span>${L('Reason','कारण')}</span><b>${rs(f.diagnosis)}</b><span>${L('Attempt integrity','अटेम्प्ट की जांच')}</span><b>${f.integrity}</b><span>${L('Last contact','आखिरी संपर्क')}</span><b>${f.last_contact}</b><span>${L('Rescue window left','विंडो बची')}</span><b>${Math.round(f.window_left_h)}h</b><span>${L('Nearby demand','आस-पास मांग')}</span><b>${f.demand.consumers} ${L('buyers','खरीदार')}, ${f.demand.retailers} ${L('retailers','दुकानदार')}</b></div>
+ <h3>${L('Value decays with time','समय के साथ मूल्य घटता है')}</h3><div class="decay" style="height:56px;margin-bottom:18px">${rc.decay.map(x=>`<div style="height:${Math.max(6,100*x.v/mx)}%"><span>+${x.h}h ${inr(x.v)}</span></div>`).join('')}</div>
+ <table class="tbl"><thead><tr><th>${L('Where it could go','कहां जा सकता है')}</th><th class="n">${L('Chance','संभावना')}</th><th class="n">${L('Time','समय')}</th><th class="n">${L('Value','मूल्य')}</th></tr></thead><tbody>${rc.options.map(o=>`<tr><td>${o.name} ${o.id===rc.best?`<span class="chip brand">${L('best','सबसे अच्छा')}</span>`:''}</td><td class="n">${pc(o.p)}</td><td class="n">${o.hrs}h</td><td class="n">${inr(o.ev)}</td></tr>`).join('')}</tbody></table>
+ <p class="note" style="margin-top:6px">${L('Option chances and planned-reverse saving are ASSUMED. Recovery value comes from a synthetic-trained model.','विकल्प की संभावना और रिवर्स बचत मान्यताएं हैं। मूल्य सिंथेटिक मॉडल से।')}</p></div>`}
+async function wi(q){try{const r=await api(`whatif/${S.sel}?${q}`);const el=$('#wi');if(el)el.innerHTML=L(`RTO ${pc(r.before)} to ${pc(r.after)}. Per 100 such parcels that is about ${r.per100_saved} fewer RTOs, about ${inr(r.value_per100)} at Rs 120. `,`RTO ${pc(r.before)} से ${pc(r.after)}। ऐसे 100 पार्सल पर लगभग ${r.per100_saved} कम RTO, लगभग ${inr(r.value_per100)}। `)+`<b>${r.label}</b>`}catch(e){toast(e.message,'bad')}}
+function whyModal(){const d=D,w=d.why;return`<div class="mo" onclick="S.whyOpen=false;paint()"><div onclick="event.stopPropagation()" role="dialog" aria-label="Why"><div class="row between"><h2 style="font-size:18px">${L('Why this recommendation','यह सुझाव क्यों')}</h2><button class="ib" onclick="S.whyOpen=false;paint()" aria-label="Close">${ic('x')}</button></div>
+ <h3>${L('What the model looked at','मॉडल ने क्या देखा')}</h3><div class="row">${Object.entries(w.inputs).map(([k,v])=>`<span class="chip info">${k.replace(/_/g,' ')}: ${v}</span>`).join('')}</div><h3>${L('Model output','मॉडल आउटपुट')}</h3><p>${w.model}</p><h3>${L('Decision rule','निर्णय नियम')}</h3><p>${w.rule}</p><p class="sub" style="margin-top:6px">${d.econ.formula}</p>
+ <p class="sub" style="margin-top:6px">${L('Fixes that reopen a locked gate are recommended even when their expected value is zero, so the delivery promise is kept.','जो काम बंद गेट खोलते हैं, वे मूल्य शून्य होने पर भी सुझाए जाते हैं ताकि डिलीवरी वादा बचे।')}</p>
+ <h3>${L('How sure are we about each number','हर संख्या पर कितना भरोसा')}</h3><div class="row">${Object.entries(w.evidence).map(([k,v])=>`<span class="chip warn">${k.replace(/_/g,' ')}: ${v}</span>`).join('')}</div></div></div>`}
+/* ---------- Simulator ---------- */
+const DISR=[['network_delay','Network delay','नेटवर्क देरी','Missed connections push parcels past their promised wave. Expect a shared-cause alert on the Hub floor.','छूटे कनेक्शन से पार्सल वादा की गई वेव से चूकते हैं। हब फ़्लोर पर साझा-कारण अलर्ट आएगा।'],
+ ['wronghub','Wrong-hub routing','गलत हब रूटिंग','Parcels land at a hub that does not serve them. Fix with Hub-Fit before the last mile is spent.','पार्सल ऐसे हब पर पहुंचे जो उन्हें सर्व नहीं करता। लास्ट माइल से पहले Hub-Fit से ठीक करें।'],
+ ['weather','Weather and traffic','मौसम और ट्रैफिक','A one-hour slip and lower partner reliability on the affected parcels.','एक घंटे की देरी और पार्टनर भरोसा कम।'],
+ ['address','Address problems','पते की समस्या','Address confidence drops. Contactability Repair should be recommended.','पते का भरोसा गिरता है। Contactability Repair सुझाया जाएगा।'],
+ ['not_home','Customers not home','ग्राहक घर पर नहीं','Takes parcels to the door, then fails them. Look for a Cluster Recovery Broadcast alert.','पार्सल दरवाज़े तक जाते हैं, फिर फेल। Cluster Recovery Broadcast अलर्ट देखें।'],
+ ['refusals','COD refusals','COD मना','Takes COD parcels to the door and refuses them. They land in Rescue nearby.','COD पार्सल दरवाज़े पर मना। ये पास में बचाएं में आते हैं।'],
+ ['no_cash','No cash at the door','दरवाज़े पर कैश नहीं','Payment Rescue (UPI) should be the top option.','Payment Rescue (UPI) सबसे ऊपर होना चाहिए।'],
+ ['rider','Unfamiliar rider','अनजान राइडर','Rider-zone fit drops. ZoneFit should be recommended.','राइडर-ज़ोन मेल गिरता है। ZoneFit सुझाया जाएगा।'],
+ ['phone','Phones unreachable','फोन नहीं लग रहे','Customer phones stop answering. Expect a WhatsApp-then-IVR phone check to be recommended.','ग्राहकों के फोन नहीं लग रहे। WhatsApp फिर IVR से फोन जांच सुझाई जाएगी।']];
+const SC=[['1','Clean delivery','साफ़ डिलीवरी',{address:'clear',payment:'Prepaid'},[['adv',8],['ev','deliver']],'PREVENT','A clean parcel clears every gate with no help.','साफ़ पार्सल बिना मदद हर गेट पार करता है।'],
+ ['2','Network delay, rescued in transit','नेटवर्क देरी, रास्ते में बचाया',{address:'clear',payment:'COD'},[['adv',3],['ev','delay'],['rec'],['adv',5],['ev','deliver']],'PREVENT','A delay breaks Gate 2 and locks everything after it. DICE re-plans the lane, and it is delivered with no failed attempt, so it counts as Prevent.','देरी से गेट 2 बंद, DICE लेन बदलता है। बिना फेल डिलीवर, इसलिए Prevent।'],
+ ['3','Customer not home, then retry','ग्राहक घर पर नहीं, फिर कोशिश',{address:'clear',payment:'COD'},[['adv',8],['ev','unavailable'],['act','retry_window']],'SAVE','The failed try is held open, not returned. Retry at the customer\'s window.','फेल कोशिश होल्ड पर, वापस नहीं। ग्राहक के समय पर दोबारा।'],
+ ['4','Customer refuses, sold nearby','ग्राहक ने मना किया, पास में बिका',{address:'clear',payment:'COD'},[['adv',8],['ev','refused'],['act','local_recovery']],'RECOVER','Home delivery is unlikely, so the parcel is sold locally. The value stays in the market.','घर पर डिलीवरी मुश्किल, पार्सल पास में बिका।'],
+ ['5','Recovery fails, planned reverse','रिकवरी फेल, प्लान्ड रिवर्स',{address:'landmark',payment:'COD'},[['rec'],['adv',8],['ev','refused'],['act','local_recovery','fail'],['act','planned_reverse']],'CHEAPER','The return still happens, but as a planned, cheaper reverse.','वापसी होती है, पर प्लान्ड और सस्ती।']];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function vSim(){const s=DB.sim,hi=S.lang==='hi',hub=S.hub;const o=S.order;
+ const optsC=META.cities.map(c=>`<option>${c}</option>`).join(''),optsK=META.categories.map(c=>`<option>${c}</option>`).join('');
+ return`<div class="info" style="margin-bottom:12px"><b>${L('How this works.','यह कैसे काम करता है।')}</b> ${L('One step moves every parcel that can move one stop further. Parcels that hit a locked gate wait there (their slack shrinks) until you or the autopilot fixes them. Each parcel keeps its own simulated clock. Nothing here is Valmo or Meesho production data.','एक स्टेप हर पार्सल को एक पड़ाव आगे बढ़ाता है। बंद गेट पर पार्सल इंतज़ार करता है (स्लैक घटता है) जब तक आप या ऑटोपायलट ठीक न करें। हर पार्सल की अपनी सिमुलेटेड घड़ी है। यहां कुछ भी Valmo या Meesho का असली डेटा नहीं।')}</div>
+ <div class="grid g3" style="align-items:start">
+ <div class="card"><h2>${ic('sim','')} ${L('1. Run the clock','1. घड़ी चलाएं')}</h2>
+  <div class="row" style="margin-bottom:10px"><button class="btn pri lg" onclick="togglePlay()">${ic(S.play?'pause':'play')} ${S.play?L('Pause','रोकें'):L('Play','चलाएं')}</button><button class="btn lg" onclick="stepSim()">${ic('step')} ${L('One step','एक स्टेप')}</button><button class="btn lg" onclick="setSpeed()">${S.speed}x</button></div>
+  <label class="f">${L('Autopilot: who fixes routine problems','ऑटोपायलट: रोज़मर्रा की समस्याएं कौन ठीक करे')}</label>
+  <div class="seg" style="width:100%">${[['off',L('Me only','सिर्फ़ मैं')],['routine',L('Routine','रोज़मर्रा')],['full',L('Everything','सब कुछ')]].map(([k,l])=>`<button style="flex:1;justify-content:center" class="${s.auto===k?'on':''}" onclick="cfg({auto:'${k}'})">${l}</button>`).join('')}</div>
+  <p class="note" style="margin-top:4px">${L('Routine: only fixes that unlock a blocked gate run by themselves (map pin, phone check, faster lane, next wave, correct hub, re-assign rider). Everything also takes worth-doing options (like a prepaid nudge) and decides failed deliveries. Failed deliveries otherwise wait for you.','रोज़मर्रा: सिर्फ़ बंद गेट खोलने वाले काम अपने-आप (मैप पिन, फोन जांच, तेज़ रूट, अगली वेव, सही हब, राइडर बदलना)। सब कुछ में फायदेमंद विकल्प और फेल डिलीवरी भी शामिल। बाकी फेल डिलीवरी आपका इंतज़ार करती हैं।')}</p>
+  <label class="f">${L('When an action is taken, does it work?','कार्रवाई करने पर क्या वह सफल होगी?')}</label>
+  <select class="in" onchange="cfg({mode:this.value})">${[['sample',L('Sometimes fails, by its success chance','कभी-कभी फेल, संभावना अनुसार')],['success',L('Always works','हमेशा सफल')],['fail',L('Always fails','हमेशा फेल')]].map(([k,l])=>`<option value="${k}" ${s.mode===k?'selected':''}>${l}</option>`).join('')}</select>
+  <label class="f">${L('New orders per step','हर स्टेप पर नए ऑर्डर')}: <b>${s.spawn}</b></label><input type="range" min="0" max="12" value="${s.spawn}" style="width:100%" onchange="cfg({spawn:+this.value})">
+  <label class="f">${L('Rescue minutes per hub per shift','हर हब की शिफ्ट में रेस्क्यू मिनट')}: <b>${s.budget}</b> <span class="tag">ASSUMED</span></label><input type="range" min="10" max="180" step="5" value="${s.budget}" style="width:100%" onchange="cfg({budget:+this.value})">
+  <p class="note">${L('Lower this to see the Intervention Budget ranking leave some fixes unfunded.','कम करें तो कुछ काम बिना क्षमता के रह जाते हैं।')}</p>
+  <div class="row" style="margin-top:12px"><button class="btn" onclick="resetSim()">${ic('reset')} ${L('Reset everything','सब रीसेट करें')}</button></div></div>
+ <div class="card"><h2>${ic('bolt','')} ${L('2. Break something','2. कुछ बिगाड़ें')}</h2><p class="sub" style="margin-bottom:8px">${hub?L('Applies to','लागू होगा')+' <b>LMDC '+hub+'</b>.':L('Applies across all hubs. Pick a hub at the top to focus it on one.','सभी हब पर लागू। एक हब पर लगाने के लिए ऊपर हब चुनें।')}</p>
+  <div class="grid" style="gap:8px">${DISR.map(d=>`<button class="dis" onclick="inject('${d[0]}')"><b>${L(d[1],d[2])}</b><span>${L(d[3],d[4])}</span></button>`).join('')}</div></div>
+ <div class="grid" style="gap:12px"><div class="card"><h2>${ic('phone','')} ${L('3. Place a test order','3. टेस्ट ऑर्डर दें')}</h2><div class="grid g2" style="gap:8px"><div><label class="f" style="margin-top:0">${L('Product','प्रोडक्ट')}</label><input id="o_p" class="in" value="Cotton kurti set"></div><div><label class="f" style="margin-top:0">${L('Value (Rs)','मूल्य (₹)')}</label><input id="o_v" class="in" type="number" value="699"></div>
+  <div><label class="f">${L('City (hub)','शहर (हब)')}</label><select id="o_c" class="in">${optsC}</select></div><div><label class="f">${L('Category','कैटेगरी')}</label><select id="o_k" class="in">${optsK}</select></div>
+  <div><label class="f">${L('Payment','भुगतान')}</label><select id="o_pay" class="in"><option>COD</option><option>Prepaid</option></select></div><div><label class="f">${L('Delivery window','डिलीवरी समय')}</label><select id="o_w" class="in"><option>7-9 PM</option><option>11 AM-2 PM</option><option>Any time</option></select></div></div>
+  <label class="f">${L('Address quality','पते की गुणवत्ता')}</label><select id="o_a" class="in"><option value="clear">${L('Clear, structured','साफ़, व्यवस्थित')}</option><option value="landmark">${L('Landmark-based','लैंडमार्क वाला')}</option><option value="incomplete">${L('Incomplete','अधूरा')}</option></select>
+  <div class="row" style="margin-top:10px"><button class="btn pri" onclick="placeOrder()">${L('Place order','ऑर्डर दें')}</button>${o?`<button class="btn" onclick="openP('${o}')">${L('Open parcel','पार्सल खोलें')} ${o}</button>`:''}</div>
+  <p class="note" style="margin-top:6px">${L('Landmark or incomplete addresses lock Gate 1, so the parcel shows up in Fix now straight away.','लैंडमार्क या अधूरा पता गेट 1 बंद करता है, इसलिए पार्सल सीधे अभी ठीक करें में दिखता है।')}</p></div>
+  <div class="card"><h2>${ic('parcel','')} ${L('Guided stories','गाइडेड कहानियां')}</h2><p class="sub" style="margin-bottom:8px">${L('Each story runs one parcel through the real engine.','हर कहानी एक पार्सल को असली इंजन से चलाती है।')}</p>
+  ${SC.map((c,i)=>`<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--line)"><div style="flex:1;min-width:140px"><b>${c[0]}. ${L(c[1],c[2])}</b><br><small>${L(c[6],c[7])}</small></div><button class="btn sm" onclick="runStory(${i})" ${S.story!==null?'disabled':''}>${L('Run','चलाएं')}</button></div>`).join('')}
+  <div id="storylog" style="margin-top:8px">${S.storyLog.map(x=>`<div class="step">${ic('check')}<span>${x}</span></div>`).join('')}</div></div></div></div>`}
+function simAfterPaint(){const b=$('#storylog');if(b)b.scrollTop=b.scrollHeight}
+async function cfg(o){try{await api('sim/config',o);await refresh()}catch(e){toast(e.message,'bad')}}
+async function resetSim(){if(S.play)togglePlay();try{await api('sim/reset',{});S.sel=null;D=null;S.order=null;S.storyLog=[];await refresh();toast(L('Simulation reset. Fresh synthetic parcels loaded.','सिमुलेशन रीसेट। नए सिंथेटिक पार्सल लोड।'),'good')}catch(e){toast(e.message,'bad')}}
+async function inject(kind){try{const r=await api('sim/inject',{kind,hub:S.hub});await refresh();const d=DISR.find(x=>x[0]===kind);toast(r.n?L(`${d[1]}: ${r.n} parcels hit. Check the Hub floor.`,`${d[2]}: ${r.n} पार्सल प्रभावित। हब फ़्लोर देखें।`):L('No parcel could be affected here. Press Step first.','कोई पार्सल प्रभावित नहीं। पहले स्टेप दबाएं।'),r.n?'good':'bad');if(r.n)S.view='floor',S.lane='fix',paint()}catch(e){toast(e.message,'bad')}}
+async function placeOrder(){try{const v=await api('order',{product:$('#o_p').value||'Test product',value:+$('#o_v').value||699,city:$('#o_c').value,category:$('#o_k').value,payment:$('#o_pay').value,window:$('#o_w').value,address:$('#o_a').value});S.order=v.id;S.sel=v.id;D=v;await refresh();toast(L(`Order ${v.id} placed. Risk ${pc(v.risk)}.`,`ऑर्डर ${v.id} दिया। जोखिम ${pc(v.risk)}।`),'good')}catch(e){toast(e.message,'bad')}}
+async function runStory(i){const c=SC[i],log=t=>{S.storyLog.push(t);paint()};S.story=i;S.storyLog=[];
+ try{let v=await api('order',{product:'Cotton kurti set',value:699,city:S.hub||'Jaipur',category:'Ethnic wear',window:'7-9 PM',...c[3]});const id=v.id;S.order=id;log(`${L('Order','ऑर्डर')} ${id}: ${L('risk','जोखिम')} ${pc(v.risk)}, Gate 1 ${v.gate_ok?L('clear','साफ़'):L('locked, action needed','बंद, कार्रवाई चाहिए')}`);
+  for(const st of c[4]){const reps=st[0]==='adv'?st[1]:1;for(let j=0;j<reps;j++){await sleep(220);
+   if(st[0]==='adv'){for(let t=0;t<4;t++){try{v=await api(`parcel/${id}/advance`,{});break}catch(e){if(!v.rec||t===3)throw e;log(`${L('Gate locked at','गेट बंद:')} G${v.gate}. DICE applies: ${vb(v.rec.id)}`);v=await api(`parcel/${id}/act`,{action:v.rec.id,mode:'success'})}}}
+   else if(st[0]==='ev')v=await api(`parcel/${id}/event`,{event:st[1]});
+   else{const a=st[0]==='rec'?v.rec.id:st[1];v=await api(`parcel/${id}/act`,{action:a,mode:st[2]||'success'});log(`${L('Action','कार्रवाई')}: ${vb(a)}${st[2]==='fail'?' ('+L('did not work','सफल नहीं')+')':''}`)}}
+   if(st[0]==='adv')log(`${L('Moved to','पहुंचा')}: ${v.stage_name}, ${L('risk','जोखिम')} ${pc(v.risk)}`);else if(st[0]==='ev')log(`${L('Event','घटना')}: ${st[1]}. ${L('State','स्थिति')}: ${v.state}`)}
+  log(`${L('Result','नतीजा')}: ${v.outcome?outl(v.outcome):v.state} ${v.outcome===c[5]?'(matches expected)':'(expected '+c[5]+')'}`);S.sel=id;D=v}catch(e){toast(e.message,'bad');S.storyLog.push('Error: '+e.message)}
+ S.story=null;await refresh()}
+/* ---------- boot ---------- */
+(async()=>{try{META=await api('meta');await refresh()}catch(e){document.body.insertAdjacentHTML('beforeend','<pre style="padding:20px">Could not reach the server: '+esc(e.message)+'</pre>')}})();
+</script></body></html>
